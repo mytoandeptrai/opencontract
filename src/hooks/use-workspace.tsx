@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import type { ContractEntry, NetworkConfig, RpcStatus, TxRecord } from "@/types";
 import { checkRpc, dropClients } from "@/lib/chain";
 
@@ -33,13 +33,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [txs, setTxs] = useState<TxRecord[]>([]);
   const [selectedContractId, setSelected] = useState<string | null>(null);
   const [activeNetworkId, setActiveNetwork] = useState<string | null>(null);
+  const netsRef = useRef<NetworkConfig[]>([]);
+  netsRef.current = networks;
 
   const testRpc = useCallback(async (id: string) => {
-    let net: NetworkConfig | undefined;
-    setNetworks((ns) => {
-      net = ns.find((n) => n.id === id);
-      return ns;
-    });
+    const net = netsRef.current.find((n) => n.id === id);
     if (!net) return { kind: "idle" } as RpcStatus;
     setRpcStatus((s) => ({ ...s, [id]: { kind: "checking" } }));
     const r = await checkRpc(net);
