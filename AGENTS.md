@@ -1,10 +1,4 @@
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
+# AGENTS
+- All user data lives only in React state (src/hooks/use-workspace.tsx, use-wallet.tsx); never add localStorage/sessionStorage/IndexedDB/cookies/backend — product requirement is zero persistence.
+- Blockchain access uses viem directly + EIP-1193 window.ethereum; no wagmi/ethers.
+- Pure logic lives in src/lib (chain, abi, args, errors); UI in src/components/oc.
