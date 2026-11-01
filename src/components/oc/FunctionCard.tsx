@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { encodeFunctionData, formatUnits, type Abi, type AbiParameter } from "viem";
+import { encodeFunctionData, formatUnits, type AbiParameter } from "viem";
 import { ChevronRight, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -110,7 +110,6 @@ export function FunctionCard({ item, contract, network, mode }: { item: Function
   const [txId, setTxId] = useState<string | null>(null);
   const tx = txId ? ws.txs.find((t) => t.id === txId) : undefined;
   const payable = fn.stateMutability === "payable";
-  const abi = contract.abi as Abi;
   const rpc = ws.rpcStatus[network.id];
 
   const onRead = async () => {
@@ -293,7 +292,6 @@ export function FunctionCard({ item, contract, network, mode }: { item: Function
       </Dialog>
     </div>
   );
-  void abi;
 }
 
 function Row({ k, v, mono }: { k: string; v: string; mono?: boolean }) {
