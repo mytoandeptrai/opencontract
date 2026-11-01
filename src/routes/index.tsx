@@ -1,24 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Toaster } from "@/components/ui/sonner";
+import { WorkspaceProvider } from "@/hooks/use-workspace";
+import { WalletProvider } from "@/hooks/use-wallet";
+import { AppShell } from "@/components/oc/AppShell";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "OpenContract — Tương tác smart contract EVM" },
+      { name: "description", content: "Gọi hàm smart contract trên mọi chain EVM bằng ABI và RPC của bạn, không cần verify. Dữ liệu chỉ trong RAM." },
+      { property: "og:title", content: "OpenContract — Tương tác smart contract EVM" },
+      { property: "og:description", content: "Đọc và ghi smart contract chưa verify với ABI, RPC riêng và browser wallet." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <WorkspaceProvider>
+      <WalletProvider>
+        <AppShell />
+        <Toaster theme="dark" position="bottom-right" />
+      </WalletProvider>
+    </WorkspaceProvider>
   );
 }
