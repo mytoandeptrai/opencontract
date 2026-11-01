@@ -15,7 +15,7 @@ interface Workspace {
   updateNetwork: (n: NetworkConfig) => void;
   removeNetwork: (id: string) => void;
   setActiveNetwork: (id: string | null) => void;
-  testRpc: (id: string) => Promise<RpcStatus>;
+  testRpc: (id: string, net?: NetworkConfig) => Promise<RpcStatus>;
   addContract: (c: Omit<ContractEntry, "id">) => ContractEntry;
   updateContract: (c: ContractEntry) => void;
   removeContract: (id: string) => void;
@@ -36,8 +36,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const netsRef = useRef<NetworkConfig[]>([]);
   netsRef.current = networks;
 
-  const testRpc = useCallback(async (id: string) => {
-    const net = netsRef.current.find((n) => n.id === id);
+  const testRpc = useCallback(async (id: string, given?: NetworkConfig) => {
+    const net = given ?? netsRef.current.find((n) => n.id === id);
     if (!net) return { kind: "idle" } as RpcStatus;
     setRpcStatus((s) => ({ ...s, [id]: { kind: "checking" } }));
     const r = await checkRpc(net);
@@ -57,13 +57,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         const net = { ...n, id: uid() };
         setNetworks((ns) => [...ns, net]);
         setActiveNetwork((a) => a ?? net.id);
-        setTimeout(() => void testRpc(net.id), 0);
+        void testRpc(net.id, net);
         return net;
       },
       updateNetwork: (n) => {
         dropClients(n.id);
         setNetworks((ns) => ns.map((x) => (x.id === n.id ? n : x)));
-        setTimeout(() => void testRpc(n.id), 0);
+        void testRpc(n.id, n);
       },
       removeNetwork: (id) => {
         dropClients(id);
