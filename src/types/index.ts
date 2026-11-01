@@ -5,7 +5,7 @@ export type RpcStatus =
   | { kind: "checking" }
   | { kind: "ok"; chainId: number; blockNumber: bigint; checkedAt: number }
   | { kind: "mismatch"; expected: number; actual: number }
-  | { kind: "error"; message: string; detail?: string };
+  | { kind: "error"; message: string; detail?: string | undefined };
 
 export interface NetworkConfig {
   id: string;

@@ -2,7 +2,7 @@ import { BaseError, ContractFunctionRevertedError, UserRejectedRequestError } fr
 
 export interface Described {
   message: string;
-  detail?: string;
+  detail?: string | undefined;
   rejected?: boolean;
 }
 
