@@ -1,0 +1,127 @@
+# Minimal Vibe Coding Kit backbone. See .vibekit/docs/BACKBONE_REFERENCE.md for details.
+version: 2
+meta:
+  template_status: initialized
+  initialized_at: 2026-11-02T02:52:50.000Z
+  template_source: minimal-vibe-coding-kit
+  schema_version: 4
+  init_runbook: .vibekit/init/FIRST_TIME_INIT.md
+  init_done_marker: .vibekit/INIT_DONE
+
+project:
+  name: opencontract
+  description: "OpenContract: browser dApp for loading EVM contract ABIs and calling/reading functions and events via viem and EIP-1193 wallets. All data is RAM-only. Vietnamese default UI with English toggle."
+  type: single-repo
+  primary_language: ts
+  package_manager: bun
+  mode: brownfield
+  prd: .vibekit/docs/PRD.md
+  context: .vibekit/docs/CONTEXT.md
+
+paths:
+  root: .
+  apps:
+    - .
+  source: [src]
+  tests: [src/test]
+  docs: [README.md, .vibekit/docs/]
+  generated: [node_modules/, dist/, .output/, .tanstack/, src/routeTree.gen.ts]
+
+conventions:
+  review_required_before_write: true
+  scope: repo
+  naming:
+    files: "components/oc: PascalCase.tsx; components/ui, hooks, lib, test: kebab-case or lowercase"
+    directories: lowercase
+    symbols: "PascalCase components/types, camelCase functions, UPPER_SNAKE constants"
+    evidence:
+      - files lowercase: 52
+      - files kebab-case: 19
+      - files PascalCase: 7
+      - symbols PascalCase: 339
+      - symbols camelCase: 110
+      - symbols UPPER_SNAKE_CASE: 12
+  architecture:
+    detected: [tanstack-start-file-routes, lib-vs-ui-split]
+    rule: "Routes in src/routes; pure logic (chain, abi, args, errors, i18n) in src/lib; app UI in src/components/oc; shadcn primitives in src/components/ui; state in src/hooks. Put new code in the nearest of these before adding a layer."
+  resources:
+    detected_asset_roots: [public]
+    detected_registries: []
+    rule: "public/ holds only favicon and robots.txt; no registry exists. Ask before adding one."
+  localization:
+    detected_catalogs: [src/lib/translations.ts]
+    detected_accessors: ["useLanguage().t", "translateText in src/lib/i18n.ts"]
+    rule: "UI copy is written in Vietnamese and passed through t(); English lives in the `english` map in translations.ts keyed by the Vietnamese text. Translate only at presentation boundaries. Never replace fragments of provider errors, addresses or contract names."
+  custom_rules:
+    - "Zero persistence: user data lives only in React state (use-workspace.tsx, use-wallet.tsx); never add localStorage, sessionStorage, IndexedDB, cookies or a backend. Source: AGENTS.md."
+    - "Chain access: viem directly plus window.ethereum (EIP-1193); no wagmi or ethers. Source: AGENTS.md."
+    - "Do not hand-edit src/routeTree.gen.ts or src/components/ui/ (generated)."
+    - "Writing style: no emoji and no em/en dashes in generated prose unless the user explicitly asks; use ASCII punctuation and keep existing characters in files whose established style already uses them. See .claude/rules/writing-style.md."
+    - "Deletion safety: use trash instead of rm; permanent deletes require explicit approval of the exact paths."
+    - "Default coding level: 3 (Senior) - apply this explanation depth every session; change with /coding-level 3."
+    - Response format: lead with the outcome; use decision tables (Option, What it does, Cost, Risk, Recommended) when the user must choose; end multi-step work with a Done / Next / Decision needed status block. See .claude/rules/response-format.md.
+    - Proportional effort: triage tasks as trivial/small/medium/large and match process weight; score the visual/e2e gate 0-6 and require user approval before visual-design-loop or e2e runs. See .claude/rules/proportional-effort.md.
+    - Plain-language register in every reply language: lead with the outcome, short sentences, active voice, define project terms at first use, and reuse the glossary in project.context (.vibekit/docs/CONTEXT.md) instead of synonyms. English-only word lists (ASD-STE100) apply only to English replies; /wait-what re-pitches a message that did not land, in the user's language, with zero new work.
+
+commands:
+  install: bun install
+  test: bun run test
+  lint: bun run lint
+  typecheck: bunx tsc --noEmit
+  build: bun run build
+  validate: bun run test
+  verification:
+    unit: bun run test
+    acceptance: null
+    architecture: null
+    property: null
+    mutation: null
+    e2e: null
+
+policy:
+  default_branch: main
+  branch_naming: "feat/<short-topic>"
+  commit_style: conventional
+  editable_paths: [.]
+  protected_paths:
+    - .git/
+    - .env*
+    - "**/*secret*"
+    - "**/*token*"
+    - "**/migrations/**"
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/coverage/**"
+    - "**/*lock*"
+    - bun.lock
+    - src/routeTree.gen.ts
+    - "src/components/ui/**"
+
+agent_surfaces:
+  claude: .claude/
+  cursor: .cursor/
+  codex: .agents/
+  codex_plugin: .codex-plugin/plugin.json
+  opencode: .opencode/
+  grok: .grok/
+  kimi: .kimi-code/
+  shared_skills: .vibekit/skills/
+  shared_commands: .vibekit/commands/
+
+automation:
+  autoresearch:
+    results_file: results.tsv
+    logs_dir: .autoresearch/logs
+    default_budget: 3
+    default_timeout_seconds: 600
+  daily_enhance:
+    report_dir: .vibekit/reports
+    write_mode: propose_only
+  finalize:
+    cleanup_dir: _vibekit-cleanup
+    marker: .vibekit/FINALIZE_DONE
+    one_time_files: [.vibekit/init/FIRST_TIME_INIT.md, .vibekit/init/FIRST_PROMPT.md, .vibekit/init/PUSH_TO_GITHUB.md, .vibekit/init/CLAUDE-template.md]
+  security:
+    probe: node .vibekit/scripts/agentshield-probe.mjs .
+    scan: npx ecc-agentshield scan --path . --format text --min-severity medium
