@@ -18,6 +18,8 @@ import { DEFAULT_LANGUAGE } from "../lib/i18n";
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      {/* React 19 hoists this into <head>; keeps 404s out of search results. */}
+      <meta name="robots" content="noindex" />
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
@@ -46,6 +48,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <meta name="robots" content="noindex" />
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           This page didn't load
