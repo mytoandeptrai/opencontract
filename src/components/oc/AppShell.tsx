@@ -1,7 +1,9 @@
+import { useLanguage } from "@/hooks/use-language";
 import { useState } from "react";
-import { FileCode2, Network, Pencil, Plus, RefreshCw, Search, Trash2, Wallet } from "lucide-react";
+import { FileCode2, Network, Pencil, Plus, RefreshCw, Search, Trash2, Wallet, Languages, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { shortAddr, useWallet } from "@/hooks/use-wallet";
@@ -14,6 +16,7 @@ import { ContractView } from "./ContractView";
 import { RpcBadge } from "./status";
 
 function WalletButton() {
+  const { t } = useLanguage();
   const w = useWallet();
   const ws = useWorkspace();
   const known = ws.networks.find((n) => n.chainId === w.chainId);
@@ -21,7 +24,7 @@ function WalletButton() {
     return (
       <div className="flex items-center gap-2">
         <span className="hidden text-xs text-muted-foreground sm:inline">{known ? known.name : `chain ${w.chainId}`}</span>
-        <Button size="sm" variant="outline" onClick={w.disconnect} title="Ngắt kết nối khỏi phiên ứng dụng">
+        <Button size="sm" variant="outline" onClick={w.disconnect} title={t("Ngắt kết nối khỏi phiên ứng dụng")}>
           <Wallet className="size-3.5" /> <span className="font-mono">{shortAddr(w.account)}</span>
         </Button>
       </div>
@@ -30,14 +33,15 @@ function WalletButton() {
     <Button
       size="sm"
       disabled={w.connecting}
-      onClick={() => void w.connect().catch((e: Error) => toast.error(e.message))}
+      onClick={() => void w.connect().catch((e: Error) => toast.error(t(e.message)))}
     >
-      <Wallet className="size-3.5" /> {w.connecting ? "Đang kết nối…" : "Kết nối wallet"}
+      <Wallet className="size-3.5" /> {w.connecting ? t("Đang kết nối…") : t("Kết nối wallet")}
     </Button>
   );
 }
 
 export function AppShell() {
+  const { language, setLanguage, t } = useLanguage();
   const ws = useWorkspace();
   const [netOpen, setNetOpen] = useState(false);
   const [editNet, setEditNet] = useState<NetworkConfig | undefined>();
@@ -50,7 +54,7 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-background/90 px-4 backdrop-blur">
+      <header className="sticky top-0 z-20 flex min-h-14 flex-wrap items-center gap-2 py-2 sm:gap-4 border-b border-border bg-background/90 px-4 backdrop-blur">
         <div className="flex items-center gap-2">
           <div className="flex size-7 items-center justify-center rounded bg-primary font-mono text-sm font-bold text-primary-foreground">oc</div>
           <span className="font-semibold tracking-tight">OpenContract</span>
@@ -61,8 +65,19 @@ export function AppShell() {
             <RpcBadge status={ws.rpcStatus[active.id]} />
           </div>
         )}
-        <p className="ml-auto hidden text-[11px] text-muted-foreground lg:block">Workspace chỉ tồn tại trong phiên hiện tại. Dữ liệu sẽ bị xóa khi tải lại hoặc đóng trang.</p>
-        <div className="ml-auto lg:ml-0"><WalletButton /></div>
+        <p className="ml-auto hidden text-[11px] text-muted-foreground lg:block">{t("Workspace chỉ tồn tại trong phiên hiện tại. Dữ liệu sẽ bị xóa khi tải lại hoặc đóng trang.")}</p>
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:ml-0">
+          <Select value={language} onValueChange={(value) => { if (value === "vi" || value === "en") setLanguage(value); }}>
+            <SelectTrigger aria-label={t("Ngôn ngữ")} className="h-8 w-[76px] gap-1 px-2 text-xs">
+              <Languages className="size-3.5 shrink-0" /><SelectValue />
+            </SelectTrigger>
+            <SelectContent><SelectItem value="vi">VI</SelectItem><SelectItem value="en">EN</SelectItem></SelectContent>
+          </Select>
+          <WalletButton />
+          <Button asChild size="icon" variant="ghost" className="size-8 shrink-0">
+            <a href="https://www.linkedin.com/in/tran-phuoc-my-toan-613971199/" target="_blank" rel="noopener noreferrer" aria-label={t("Hồ sơ tác giả — Trần Phước Mỹ Toàn")} title={t("Hồ sơ tác giả — Trần Phước Mỹ Toàn")}><UserRound className="size-4" /></a>
+          </Button>
+        </div>
       </header>
 
       <div className="flex flex-1 flex-col md:flex-row">
@@ -70,9 +85,9 @@ export function AppShell() {
           <section className="space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Networks</h2>
-              <Button size="sm" variant="ghost" onClick={() => { setEditNet(undefined); setNetOpen(true); }}><Plus className="size-3.5" /> Thêm</Button>
+              <Button size="sm" variant="ghost" onClick={() => { setEditNet(undefined); setNetOpen(true); }}><Plus className="size-3.5" /> {t("Thêm")}</Button>
             </div>
-            {ws.networks.length === 0 && <p className="text-xs text-muted-foreground">Chưa có network.</p>}
+            {ws.networks.length === 0 && <p className="text-xs text-muted-foreground">{t("Chưa có network.")}</p>}
             {ws.networks.map((n) => {
               const st = ws.rpcStatus[n.id];
               return (
@@ -86,13 +101,13 @@ export function AppShell() {
                   <div className="mt-1 flex items-center justify-between">
                     <RpcBadge status={st} />
                     <div className="flex">
-                      <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => void ws.testRpc(n.id)} aria-label="Kiểm tra RPC"><RefreshCw className={cn("size-3.5", st?.kind === "checking" && "animate-spin")} /></button>
-                      <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => { setEditNet(n); setNetOpen(true); }} aria-label="Sửa network"><Pencil className="size-3.5" /></button>
-                      <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => ws.removeNetwork(n.id)} aria-label="Xóa network"><Trash2 className="size-3.5" /></button>
+                      <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => void ws.testRpc(n.id)} aria-label={t("Kiểm tra RPC")}><RefreshCw className={cn("size-3.5", st?.kind === "checking" && "animate-spin")} /></button>
+                      <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => { setEditNet(n); setNetOpen(true); }} aria-label={t("Sửa network")}><Pencil className="size-3.5" /></button>
+                      <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => ws.removeNetwork(n.id)} aria-label={t("Xóa network")}><Trash2 className="size-3.5" /></button>
                     </div>
                   </div>
                   {st?.kind === "error" && <p className="mt-1 text-[11px] text-destructive">{st.message}</p>}
-                  {st?.kind === "mismatch" && <p className="mt-1 text-[11px] text-destructive">RPC trả về chain {st.actual}, cấu hình {st.expected}</p>}
+                  {st?.kind === "mismatch" && <p className="mt-1 text-[11px] text-destructive">{t("RPC trả về chain")} {st.actual}{t(", cấu hình")} {st.expected}</p>}
                 </div>
               );
             })}
@@ -101,21 +116,21 @@ export function AppShell() {
           <section className="space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contracts</h2>
-              <Button size="sm" variant="ghost" onClick={() => { setEditC(undefined); setCOpen(true); }} disabled={ws.networks.length === 0}><Plus className="size-3.5" /> Thêm</Button>
+              <Button size="sm" variant="ghost" onClick={() => { setEditC(undefined); setCOpen(true); }} disabled={ws.networks.length === 0}><Plus className="size-3.5" /> {t("Thêm")}</Button>
             </div>
             {ws.contracts.length > 0 && (
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
-                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm contract…" className="h-8 pl-8 text-xs" />
+                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Tìm contract…")} className="h-8 pl-8 text-xs" />
               </div>
             )}
-            {ws.contracts.length === 0 && <p className="text-xs text-muted-foreground">Chưa có contract.</p>}
+            {ws.contracts.length === 0 && <p className="text-xs text-muted-foreground">{t("Chưa có contract.")}</p>}
             {filtered.map((c) => {
               const n = ws.networks.find((x) => x.id === c.networkId);
               return (
                 <button key={c.id} onClick={() => ws.selectContract(c.id)} className={cn("w-full rounded-md px-2 py-1.5 text-left", c.id === ws.selectedContractId ? "bg-accent" : "hover:bg-accent/50")}>
                   <div className="flex items-center gap-2 text-sm"><span className="size-1.5 rounded-full" style={{ background: n?.color ?? "gray" }} /><span className="truncate">{c.name}</span></div>
-                  <div className="truncate pl-3.5 font-mono text-[10px] text-muted-foreground">{shortAddr(c.address)} · {n?.name ?? "network đã xóa"}</div>
+                  <div className="truncate pl-3.5 font-mono text-[10px] text-muted-foreground">{shortAddr(c.address)} · {n?.name ?? t("network đã xóa")}</div>
                 </button>
               );
             })}
@@ -140,15 +155,16 @@ export function AppShell() {
 }
 
 function EmptyState({ hasNetwork, onAddNetwork, onAddContract }: { hasNetwork: boolean; onAddNetwork: () => void; onAddContract: () => void }) {
+  const { t } = useLanguage();
   const steps = [
-    { icon: Network, title: "1. Cấu hình network", body: "Bất kỳ chain EVM nào: chain ID, RPC URL riêng của bạn. Chain ID thực tế sẽ được kiểm tra.", done: hasNetwork, action: onAddNetwork, label: "Thêm network" },
-    { icon: FileCode2, title: "2. Thêm contract", body: "Địa chỉ contract (kể cả proxy) và ABI JSON hoặc artifact Hardhat/Foundry. Không cần verify trên explorer.", done: false, action: onAddContract, label: "Thêm contract", disabled: !hasNetwork },
-    { icon: Wallet, title: "3. Đọc & ghi", body: "Hàm view/pure chạy qua RPC không cần wallet. Hàm ghi dùng browser wallet và chỉ gửi khi bạn xác nhận.", done: false },
+    { icon: Network, title: t("1. Cấu hình network"), body: t("Bất kỳ chain EVM nào: chain ID, RPC URL riêng của bạn. Chain ID thực tế sẽ được kiểm tra."), done: hasNetwork, action: onAddNetwork, label: t("Thêm network") },
+    { icon: FileCode2, title: t("2. Thêm contract"), body: t("Địa chỉ contract (kể cả proxy) và ABI JSON hoặc artifact Hardhat/Foundry. Không cần verify trên explorer."), done: false, action: onAddContract, label: t("Thêm contract"), disabled: !hasNetwork },
+    { icon: Wallet, title: t("3. Đọc & ghi"), body: t("Hàm view/pure chạy qua RPC không cần wallet. Hàm ghi dùng browser wallet và chỉ gửi khi bạn xác nhận."), done: false },
   ];
   return (
     <div className="mx-auto max-w-2xl py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">Tương tác với smart contract EVM — không cần verify.</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Mọi thứ chỉ nằm trong bộ nhớ của tab này. Tải lại trang sẽ xóa sạch workspace.</p>
+      <h1 className="text-2xl font-semibold tracking-tight">{t("Tương tác với smart contract EVM — không cần verify.")}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t("Mọi thứ chỉ nằm trong bộ nhớ của tab này. Tải lại trang sẽ xóa sạch workspace.")}</p>
       <div className="mt-8 space-y-3">
         {steps.map((s) => (
           <div key={s.title} className="flex items-start gap-3 rounded-lg border border-border bg-card p-4">

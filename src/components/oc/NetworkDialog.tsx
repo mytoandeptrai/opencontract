@@ -1,3 +1,4 @@
+import { useLanguage } from "@/hooks/use-language";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ function toDraft(n: Omit<NetworkConfig, "id">): NetworkDraft {
 }
 
 export function NetworkDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChange: (o: boolean) => void; editing?: NetworkConfig | undefined }) {
+  const { t } = useLanguage();
   const ws = useWorkspace();
   const [d, setD] = useState<NetworkDraft>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof NetworkDraft, string>>>({});
@@ -29,7 +31,7 @@ export function NetworkDialog({ open, onOpenChange, editing }: { open: boolean; 
     <div className="space-y-1">
       <Label htmlFor={`net-${k}`} className="text-xs">{label}</Label>
       <Input id={`net-${k}`} value={d[k]} onChange={(e) => setD({ ...d, [k]: e.target.value })} {...props} />
-      {errors[k] && <p className="text-xs text-destructive">{errors[k]}</p>}
+      {errors[k] && <p className="text-xs text-destructive">{t(errors[k] ?? "")}</p>}
     </div>
   );
 
@@ -56,11 +58,11 @@ export function NetworkDialog({ open, onOpenChange, editing }: { open: boolean; 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{editing ? "Sửa network" : "Thêm network EVM"}</DialogTitle>
+          <DialogTitle>{editing ? t("Sửa network") : t("Thêm network EVM")}</DialogTitle>
         </DialogHeader>
         {!editing && (
           <div className="space-y-1.5">
-            <p className="text-xs text-muted-foreground">Điền nhanh từ mẫu (có thể thay RPC bằng endpoint riêng):</p>
+            <p className="text-xs text-muted-foreground">{t("Điền nhanh từ mẫu (có thể thay RPC bằng endpoint riêng):")}</p>
             <div className="flex flex-wrap gap-1.5">
               {PRESETS.map((p) => (
                 <button key={p.chainId} type="button" onClick={() => setD(toDraft(p))} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-accent">
@@ -71,22 +73,22 @@ export function NetworkDialog({ open, onOpenChange, editing }: { open: boolean; 
           </div>
         )}
         <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">{field("name", "Tên network")}</div>
+          <div className="col-span-2">{field("name", t("Tên network"))}</div>
           {field("chainId", "Chain ID", { inputMode: "numeric", className: "font-mono" })}
           <div className="space-y-1">
-            <Label htmlFor="net-color" className="text-xs">Màu nhận diện</Label>
+            <Label htmlFor="net-color" className="text-xs">{t("Màu nhận diện")}</Label>
             <Input id="net-color" type="color" value={d.color} onChange={(e) => setD({ ...d, color: e.target.value })} className="h-9 p-1" />
           </div>
           <div className="col-span-2">{field("rpcUrl", "RPC URL", { className: "font-mono text-xs", placeholder: "https://…", autoComplete: "off", spellCheck: false })}</div>
-          {field("currencyName", "Tên native currency")}
-          {field("currencySymbol", "Ký hiệu")}
+          {field("currencyName", t("Tên native currency"))}
+          {field("currencySymbol", t("Ký hiệu"))}
           {field("currencyDecimals", "Decimals", { inputMode: "numeric" })}
-          {field("explorerUrl", "Block explorer (tùy chọn)", { placeholder: "https://…" })}
+          {field("explorerUrl", t("Block explorer (tùy chọn)"), { placeholder: "https://…" })}
         </div>
-        <p className="text-[11px] text-muted-foreground">RPC URL có thể chứa API key. Nó chỉ nằm trong bộ nhớ của tab này và chỉ được gửi tới chính endpoint đó.</p>
+        <p className="text-[11px] text-muted-foreground">{t("RPC URL có thể chứa API key. Nó chỉ nằm trong bộ nhớ của tab này và chỉ được gửi tới chính endpoint đó.")}</p>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Hủy</Button>
-          <Button onClick={submit}>{editing ? "Lưu & kiểm tra" : "Thêm & kiểm tra RPC"}</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("Hủy")}</Button>
+          <Button onClick={submit}>{editing ? t("Lưu & kiểm tra") : t("Thêm & kiểm tra RPC")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
