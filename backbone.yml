@@ -51,7 +51,7 @@ conventions:
   localization:
     detected_catalogs: [src/lib/translations.ts]
     detected_accessors: ["useLanguage().t", "translateText in src/lib/i18n.ts"]
-    rule: "UI copy is written in Vietnamese and passed through t(); English lives in the `english` map in translations.ts keyed by the Vietnamese text. Translate only at presentation boundaries. Never replace fragments of provider errors, addresses or contract names."
+    rule: "UI copy is written in Vietnamese and passed through t(); English lives in the `english` map in translations.ts keyed by the Vietnamese text. Translate only at presentation boundaries. Never replace fragments of provider errors, addresses or contract names. Long-form page copy (about, privacy, terms) lives in src/lib/content/*.ts as { en, vi } objects instead of translations.ts."
   custom_rules:
     - "Zero persistence: user data lives only in React state (use-workspace.tsx, use-wallet.tsx); never add localStorage, sessionStorage, IndexedDB, cookies or a backend. Source: AGENTS.md."
     - "Chain access: viem directly plus window.ethereum (EIP-1193); no wagmi or ethers. Source: AGENTS.md."

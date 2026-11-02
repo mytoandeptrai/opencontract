@@ -1,6 +1,6 @@
 import { useLanguage } from "@/hooks/use-language";
 import { useState } from "react";
-import { FileCode2, Network, Pencil, Plus, RefreshCw, Search, Trash2, Wallet, Languages, UserRound } from "lucide-react";
+import { FileCode2, Network, Pencil, Plus, RefreshCw, Search, Trash2, Wallet, Languages, UserRound, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,6 +14,7 @@ import { NetworkDialog } from "./NetworkDialog";
 import { ContractDialog } from "./ContractDialog";
 import { ContractView } from "./ContractView";
 import { RpcBadge } from "./status";
+import { SiteFooter } from "./SitePage";
 
 function WalletButton() {
   const { t } = useLanguage();
@@ -74,6 +75,9 @@ export function AppShell() {
             <SelectContent><SelectItem value="vi">VI</SelectItem><SelectItem value="en">EN</SelectItem></SelectContent>
           </Select>
           <WalletButton />
+          <Button asChild size="icon" variant="ghost" className="size-8 shrink-0">
+            <a href="/about" target="_blank" rel="noopener" aria-label={t("Giới thiệu")} title={t("Giới thiệu")}><Info className="size-4" /></a>
+          </Button>
           <Button asChild size="icon" variant="ghost" className="size-8 shrink-0">
             <a href="https://www.linkedin.com/in/tran-phuoc-my-toan-613971199/" target="_blank" rel="noopener noreferrer" aria-label={t("Hồ sơ tác giả — Trần Phước Mỹ Toàn")} title={t("Hồ sơ tác giả — Trần Phước Mỹ Toàn")}><UserRound className="size-4" /></a>
           </Button>
@@ -147,6 +151,7 @@ export function AppShell() {
           )}
         </main>
       </div>
+      <SiteFooter newTab />
 
       <NetworkDialog open={netOpen} onOpenChange={setNetOpen} editing={editNet} />
       <ContractDialog open={cOpen} onOpenChange={setCOpen} editing={editC} />

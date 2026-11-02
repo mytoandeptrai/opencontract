@@ -1,4 +1,11 @@
 export const english: Record<string, string> = {
+  "Giới thiệu": "About",
+  "Quyền riêng tư": "Privacy",
+  "Điều khoản": "Terms",
+  "Mở ứng dụng": "Open app",
+  "Cập nhật lần cuối: {0}": "Last updated: {0}",
+  "Câu hỏi thường gặp": "Frequently asked questions",
+  "Liên hệ": "Contact",
   "Ngắt kết nối khỏi phiên ứng dụng": "Disconnect from this app session",
   "Đang kết nối…": "Connecting…",
   "Kết nối wallet": "Connect wallet",
