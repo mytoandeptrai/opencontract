@@ -106,7 +106,7 @@ export function AppShell() {
                       <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => ws.removeNetwork(n.id)} aria-label={t("Xóa network")}><Trash2 className="size-3.5" /></button>
                     </div>
                   </div>
-                  {st?.kind === "error" && <p className="mt-1 text-[11px] text-destructive">{st.message}</p>}
+                  {st?.kind === "error" && <p className="mt-1 text-[11px] text-destructive">{t(st.message)}</p>}
                   {st?.kind === "mismatch" && <p className="mt-1 text-[11px] text-destructive">{t("RPC trả về chain")} {st.actual}{t(", cấu hình")} {st.expected}</p>}
                 </div>
               );
