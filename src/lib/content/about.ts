@@ -41,13 +41,15 @@ export const about: BilingualPage = {
           "Zero user data is stored. Networks, contracts and ABIs live only in the memory of the current tab. Reload or close the page and everything is gone. There is no account, no backend and no analytics.",
         ],
       },
-      {
-        heading: "Who built it",
-        paragraphs: [
-          `OpenContract is built by ${SITE.author.name}. It started as a personal tool for my own deployments, then my teammates started using it, and now it is free for everyone.`,
-        ],
-      },
     ],
+    author: {
+      heading: "About the author",
+      role: `${SITE.author.jobTitle}, Fullstack Blockchain · Da Nang, Vietnam`,
+      bio: [
+        "I'm a software engineer with 5 years of experience building production web and blockchain systems, from React/Next.js frontends to NestJS and Go backends and Solidity smart contracts. I currently lead a team delivering stablecoin, cross-chain bridge, token-migration and crypto-payment products across multiple EVM chains.",
+        "OpenContract came out of that work: after deploying many contracts that weren't verified yet, I wanted a faster way to call them than the CLI or Remix. It started as a personal tool, my teammates started using it, and now it is free for everyone.",
+      ],
+    },
     faq: [
       {
         q: "Can I interact with an unverified contract?",
@@ -114,13 +116,15 @@ export const about: BilingualPage = {
           "Không lưu bất kỳ dữ liệu người dùng nào. Network, contract và ABI chỉ nằm trong bộ nhớ của tab hiện tại. Tải lại hoặc đóng trang là mọi thứ biến mất. Không tài khoản, không backend, không analytics.",
         ],
       },
-      {
-        heading: "Người tạo ra",
-        paragraphs: [
-          `OpenContract được xây dựng bởi ${SITE.author.name}. Ban đầu là công cụ cá nhân cho các lần deploy của mình, sau đó đồng đội cùng dùng, và giờ miễn phí cho tất cả mọi người.`,
-        ],
-      },
     ],
+    author: {
+      heading: "Về tác giả",
+      role: `${SITE.author.jobTitle}, Fullstack Blockchain · Đà Nẵng, Việt Nam`,
+      bio: [
+        "Tôi là kỹ sư phần mềm với 5 năm kinh nghiệm xây dựng hệ thống web và blockchain chạy production, từ frontend React/Next.js, backend NestJS và Go đến smart contract Solidity. Hiện tôi dẫn dắt một team phát triển các sản phẩm stablecoin, cross-chain bridge, migration token và thanh toán crypto trên nhiều chain EVM.",
+        "OpenContract ra đời từ chính công việc đó: sau khi deploy rất nhiều contract chưa verify, tôi muốn có cách gọi chúng nhanh hơn CLI hay Remix. Ban đầu là công cụ cá nhân, sau đó đồng đội cùng dùng, và giờ miễn phí cho tất cả mọi người.",
+      ],
+    },
     faq: [
       {
         q: "Có thể tương tác với contract chưa verify không?",

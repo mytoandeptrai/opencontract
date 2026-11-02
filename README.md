@@ -83,6 +83,6 @@ Issues and pull requests are welcome. Please keep the RAM-only rule: never add p
 
 ## Author
 
-Built by **Tran Phuoc My Toan**: [LinkedIn](https://www.linkedin.com/in/tran-phuoc-my-toan-613971199/) · [GitHub](https://github.com/mytoandeptrai/)
+Built by **Trần Phước Mỹ Toàn** (Tran Phuoc My Toan), Software Engineer: [LinkedIn](https://www.linkedin.com/in/tran-phuoc-my-toan-613971199/) · [GitHub](https://github.com/mytoandeptrai/)
 
 If OpenContract saves you time, a star on [the repo](https://github.com/mytoandeptrai/opencontract) helps others find it.

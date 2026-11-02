@@ -39,6 +39,18 @@ export function SiteFooter({ newTab = false }: { newTab?: boolean }) {
   );
 }
 
+function ContactLinks({ label }: { label: string }) {
+  return (
+    <p className="mt-6 text-sm text-muted-foreground">
+      {label}: <a href={`mailto:${SITE.email}`} className="text-primary hover:underline">{SITE.email}</a>
+      {" · "}
+      <a href={SITE.author.url} target="_blank" rel="noopener noreferrer me" className="text-primary hover:underline">LinkedIn</a>
+      {" · "}
+      <a href={SITE.github} target="_blank" rel="noopener noreferrer me" className="text-primary hover:underline">GitHub</a>
+    </p>
+  );
+}
+
 export function SitePage({ content }: { content: BilingualPage }) {
   const { language, t } = useLanguage();
   const c = content[language];
@@ -86,13 +98,17 @@ export function SitePage({ content }: { content: BilingualPage }) {
           </section>
         )}
 
-        <p className="mt-10 text-sm text-muted-foreground">
-          {t("Liên hệ")}: <a href={`mailto:${SITE.email}`} className="text-primary hover:underline">{SITE.email}</a>
-          {" · "}
-          <a href={SITE.author.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">LinkedIn</a>
-          {" · "}
-          <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GitHub</a>
-        </p>
+        {c.author ? (
+          <section className="mt-10 rounded-lg border border-border bg-card p-5">
+            <h2 className="text-lg font-semibold">{c.author.heading}</h2>
+            <p className="mt-3 font-medium">{SITE.author.name}</p>
+            <p className="text-xs text-muted-foreground">{c.author.role}</p>
+            {c.author.bio.map((p) => <p key={p} className="mt-3 text-sm leading-relaxed text-muted-foreground">{p}</p>)}
+            <ContactLinks label={t("Liên hệ")} />
+          </section>
+        ) : (
+          <ContactLinks label={t("Liên hệ")} />
+        )}
       </main>
 
       <SiteFooter />

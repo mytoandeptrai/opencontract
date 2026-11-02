@@ -14,6 +14,7 @@ export interface PageContent {
   intro: string;
   sections: PageSection[];
   faq?: { q: string; a: string }[];
+  author?: { heading: string; role: string; bio: string[] };
 }
 
 export type BilingualPage = Record<Language, PageContent>;

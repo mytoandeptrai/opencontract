@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { LanguageProvider } from "@/hooks/use-language";
 import { SitePage } from "@/components/oc/SitePage";
 import { about } from "@/lib/content/about";
-import { SITE, absoluteUrl, pageHead } from "@/lib/site";
+import { absoluteUrl, pageHead, personJsonLd } from "@/lib/site";
 
 const aboutJsonLd = {
   "@context": "https://schema.org",
@@ -12,7 +12,8 @@ const aboutJsonLd = {
       name: about.en.title,
       url: absoluteUrl("/about"),
       description: about.en.description,
-      author: { "@type": "Person", name: SITE.author.name, url: SITE.author.url, email: SITE.email },
+      author: personJsonLd,
+      mainEntity: personJsonLd,
     },
     {
       "@type": "FAQPage",

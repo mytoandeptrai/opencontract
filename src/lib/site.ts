@@ -14,7 +14,12 @@ export const SITE = {
   ],
   image: "/og-image.png",
   imageAlt: "OpenContract: interact with any EVM contract, no verification needed",
-  author: { name: "Tran Phuoc My Toan", url: "https://www.linkedin.com/in/tran-phuoc-my-toan-613971199/" },
+  author: {
+    name: "Trần Phước Mỹ Toàn",
+    alternateName: "Tran Phuoc My Toan",
+    jobTitle: "Software Engineer",
+    url: "https://www.linkedin.com/in/tran-phuoc-my-toan-613971199/",
+  },
   email: "mytoandn@gmail.com",
   github: "https://github.com/mytoandeptrai/",
   repo: "https://github.com/mytoandeptrai/opencontract",
@@ -41,6 +46,19 @@ export function pageHead(path: string, page: { title: string; description: strin
   };
 }
 
+export const personJsonLd = {
+  "@type": "Person",
+  name: SITE.author.name,
+  alternateName: SITE.author.alternateName,
+  jobTitle: SITE.author.jobTitle,
+  url: SITE.author.url,
+  email: SITE.email,
+  address: { "@type": "PostalAddress", addressLocality: "Da Nang", addressCountry: "VN" },
+  alumniOf: { "@type": "CollegeOrUniversity", name: "University of Science and Education - The University of Da Nang" },
+  knowsAbout: ["Solidity", "Smart Contracts", "EVM", "Cross-chain Bridges", "Stablecoins", "React", "Next.js", "TypeScript", "NestJS", "Go"],
+  sameAs: [SITE.author.url, SITE.github],
+};
+
 export const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
@@ -54,6 +72,6 @@ export const jsonLd = {
   isAccessibleForFree: true,
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   keywords: SITE.keywords.join(", "),
-  author: { "@type": "Person", name: SITE.author.name, url: SITE.author.url, email: SITE.email, sameAs: [SITE.author.url, SITE.github] },
+  author: personJsonLd,
   sameAs: [SITE.repo],
 };
