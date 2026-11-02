@@ -10,7 +10,7 @@ meta:
 
 project:
   name: opencontract
-  description: "OpenContract: browser dApp for loading EVM contract ABIs and calling/reading functions and events via viem and EIP-1193 wallets. All data is RAM-only. Vietnamese default UI with English toggle."
+  description: "OpenContract: browser dApp for loading EVM contract ABIs and calling/reading functions and events via viem and EIP-1193 wallets. All data is RAM-only. English default UI (SEO target) with Vietnamese toggle."
   type: single-repo
   primary_language: ts
   package_manager: bun

@@ -2,7 +2,7 @@ import { english } from "./translations";
 
 export type Language = "vi" | "en";
 export type Translator = (text: string, ...values: unknown[]) => string;
-export const DEFAULT_LANGUAGE: Language = "vi";
+export const DEFAULT_LANGUAGE: Language = "en";
 
 const templates = Object.entries(english)
   .filter(([key]) => /\{\d+\}/.test(key))

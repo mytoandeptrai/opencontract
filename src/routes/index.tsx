@@ -4,17 +4,23 @@ import { WorkspaceProvider } from "@/hooks/use-workspace";
 import { WalletProvider } from "@/hooks/use-wallet";
 import { LanguageProvider } from "@/hooks/use-language";
 import { AppShell } from "@/components/oc/AppShell";
+import { SITE, absoluteUrl, jsonLd } from "@/lib/site";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "OpenContract — Tương tác smart contract EVM" },
-      { name: "description", content: "Gọi hàm smart contract trên mọi chain EVM bằng ABI và RPC của bạn, không cần verify. Dữ liệu chỉ trong RAM." },
-      { property: "og:title", content: "OpenContract — Tương tác smart contract EVM" },
-      { property: "og:description", content: "Đọc và ghi smart contract chưa verify với ABI, RPC riêng và browser wallet." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { title: SITE.title },
+      { name: "description", content: SITE.description },
+      { name: "keywords", content: SITE.keywords.join(", ") },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
+      { property: "og:title", content: SITE.title },
+      { property: "og:description", content: SITE.description },
+      { property: "og:url", content: absoluteUrl("/") },
+      { name: "twitter:title", content: SITE.title },
+      { name: "twitter:description", content: SITE.description },
     ],
+    links: [{ rel: "canonical", href: absoluteUrl("/") }],
+    scripts: [{ type: "application/ld+json", children: JSON.stringify(jsonLd) }],
   }),
   component: Index,
 });
