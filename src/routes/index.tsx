@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { WorkspaceProvider } from "@/hooks/use-workspace";
 import { WalletProvider } from "@/hooks/use-wallet";
+import { LanguageProvider } from "@/hooks/use-language";
 import { AppShell } from "@/components/oc/AppShell";
 
 export const Route = createFileRoute("/")({
@@ -20,11 +21,13 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
+    <LanguageProvider>
     <WorkspaceProvider>
       <WalletProvider>
         <AppShell />
         <Toaster theme="dark" position="bottom-right" />
       </WalletProvider>
     </WorkspaceProvider>
+    </LanguageProvider>
   );
 }

@@ -1,3 +1,4 @@
+import { useLanguage } from "@/hooks/use-language";
 import { useEffect, useMemo, useState } from "react";
 import { Pencil, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,15 +16,16 @@ import { InfoPanel } from "./InfoPanel";
 import { CopyButton, Notice, RpcBadge } from "./status";
 
 function FnList({ items, contract, network, mode }: { items: FunctionItem[]; contract: ContractEntry; network: NetworkConfig; mode: "read" | "write" }) {
+  const { t } = useLanguage();
   const [q, setQ] = useState("");
   const shown = items.filter((i) => i.signature.toLowerCase().includes(q.toLowerCase()));
-  if (items.length === 0) return <Notice tone="info">Không có function {mode === "read" ? "đọc (view/pure)" : "ghi (nonpayable/payable)"} trong ABI.</Notice>;
+  if (items.length === 0) return <Notice tone="info">{t("Không có function")} {mode === "read" ? t("đọc (view/pure)") : t("ghi (nonpayable/payable)")} {t("trong ABI.")}</Notice>;
   return (
     <div className="space-y-2">
       {items.length > 6 && (
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Lọc function…" className="pl-8" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Lọc function…")} className="pl-8" />
         </div>
       )}
       {shown.map((it) => (
@@ -34,31 +36,30 @@ function FnList({ items, contract, network, mode }: { items: FunctionItem[]; con
 }
 
 function WalletGuard({ network }: { network: NetworkConfig }) {
+  const { t } = useLanguage();
   const w = useWallet();
-  if (!w.available) return <Notice>Không phát hiện browser wallet (EIP-1193). Cài MetaMask hoặc wallet tương thích để gửi giao dịch.</Notice>;
+  if (!w.available) return <Notice>{t("Không phát hiện browser wallet (EIP-1193). Cài MetaMask hoặc wallet tương thích để gửi giao dịch.")}</Notice>;
   if (!w.account)
     return (
       <Notice>
-        Chưa kết nối wallet. <button className="underline" onClick={() => void w.connect().catch((e: Error) => alertErr(e))}>Kết nối</button> để gửi giao dịch.
-      </Notice>
+        {t("Chưa kết nối wallet.")} <Button variant="link" size="sm" onClick={() => void w.connect().catch((e: Error) => toast.error(t(e.message)))}>{t("Kết nối")}</Button> {t("để gửi giao dịch.")} </Notice>
     );
   if (w.chainId !== network.chainId)
     return (
       <Notice>
-        Wallet ở chain {w.chainId}, contract ở {network.name} ({network.chainId}). Giao dịch ghi bị chặn.{" "}
+        {t("Wallet ở chain")} {w.chainId}{t(", contract ở")} {network.name} ({network.chainId}{t("). Giao dịch ghi bị chặn.")}{" "}
         <button
           className="underline"
           onClick={async () => {
             try {
               const actual = await w.switchTo(network);
-              if (actual !== network.chainId) alertErr(new Error(`Wallet vẫn ở chain ${actual}.`));
+              if (actual !== network.chainId) alertErr(new Error(t("Wallet vẫn ở chain {0}.", actual)));
             } catch (e) {
-              alertErr(e as Error);
+              toast.error(t((e as Error).message));
             }
           }}
         >
-          Chuyển / thêm network
-        </button>
+          {t("Chuyển / thêm network")} </button>
       </Notice>
     );
   return null;
@@ -70,6 +71,7 @@ function alertErr(e: Error) {
 }
 
 export function ContractView({ contract, onEdit }: { contract: ContractEntry; onEdit: () => void }) {
+  const { t } = useLanguage();
   const ws = useWorkspace();
   const network = ws.networks.find((n) => n.id === contract.networkId);
   const fns = useMemo(() => listFunctions(contract.abi), [contract.abi]);
@@ -91,7 +93,7 @@ export function ContractView({ contract, onEdit }: { contract: ContractEntry; on
     };
   }, [network, contract.address]);
 
-  if (!network) return <Notice>Network của contract này đã bị xóa. Hãy sửa contract và chọn network khác.</Notice>;
+  if (!network) return <Notice>{t("Network của contract này đã bị xóa. Hãy sửa contract và chọn network khác.")}</Notice>;
   const rpc = ws.rpcStatus[network.id];
 
   return (
@@ -109,21 +111,21 @@ export function ContractView({ contract, onEdit }: { contract: ContractEntry; on
           </div>
         </div>
         <div className="flex gap-1">
-          <Button size="sm" variant="outline" onClick={onEdit}><Pencil className="size-3.5" /> Sửa</Button>
-          <Button size="sm" variant="ghost" onClick={() => ws.removeContract(contract.id)} aria-label="Xóa contract"><Trash2 className="size-3.5" /></Button>
+          <Button size="sm" variant="outline" onClick={onEdit}><Pencil className="size-3.5" /> {t("Sửa")}</Button>
+          <Button size="sm" variant="ghost" onClick={() => ws.removeContract(contract.id)} aria-label={t("Xóa contract")}><Trash2 className="size-3.5" /></Button>
         </div>
       </div>
 
-      {rpc?.kind === "mismatch" && <Notice>RPC trả về chain ID {rpc.actual}, khác cấu hình {rpc.expected}. Kết quả có thể đến từ network khác.</Notice>}
-      {rpc?.kind === "error" && <Notice>RPC lỗi: {rpc.message}</Notice>}
-      {bytecode.kind === "empty" && <Notice>Không tìm thấy bytecode tại địa chỉ này trên {network.name}. Địa chỉ có thể không chứa contract.</Notice>}
+      {rpc?.kind === "mismatch" && <Notice>{t("RPC trả về chain ID")} {rpc.actual}{t(", khác cấu hình")} {rpc.expected}{t(". Kết quả có thể đến từ network khác.")}</Notice>}
+      {rpc?.kind === "error" && <Notice>{t("RPC lỗi:")} {t(rpc.message)}</Notice>}
+      {bytecode.kind === "empty" && <Notice>{t("Không tìm thấy bytecode tại địa chỉ này trên")} {network.name}{t(". Địa chỉ có thể không chứa contract.")}</Notice>}
 
       <Tabs defaultValue="read">
         <TabsList>
           <TabsTrigger value="read">Read ({fns.reads.length})</TabsTrigger>
           <TabsTrigger value="write">Write ({fns.writes.length})</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="info">Info</TabsTrigger>
+          <TabsTrigger value="events">{t("Sự kiện")}</TabsTrigger>
+          <TabsTrigger value="info">{t("Thông tin")}</TabsTrigger>
         </TabsList>
         <TabsContent value="read" className="mt-3">
           <FnList items={fns.reads} contract={contract} network={network} mode="read" />

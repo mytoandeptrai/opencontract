@@ -1,3 +1,4 @@
+import { useLanguage } from "@/hooks/use-language";
 import { useState } from "react";
 import { encodeFunctionData, formatUnits, type AbiParameter } from "viem";
 import { ChevronRight, ExternalLink, Loader2 } from "lucide-react";
@@ -16,8 +17,9 @@ import { cn } from "@/lib/utils";
 import { CopyButton, ErrorBox, Notice } from "./status";
 
 function ParamField({ p, i, value, onChange }: { p: AbiParameter; i: number; value: string; onChange: (v: string) => void }) {
+  const { t } = useLanguage();
   const label = `${p.name || `arg${i}`}`;
-  const common = { value, onChange: (e: { target: { value: string } }) => onChange(e.target.value), placeholder: placeholderFor(p), spellCheck: false };
+  const common = { value, onChange: (e: { target: { value: string } }) => onChange(e.target.value), placeholder: t(placeholderFor(p)), spellCheck: false };
   return (
     <label className="block space-y-1">
       <span className="text-xs text-muted-foreground">
@@ -32,7 +34,8 @@ function ParamField({ p, i, value, onChange }: { p: AbiParameter; i: number; val
 }
 
 function OutputView({ outputs, result }: { outputs: readonly AbiParameter[]; result: unknown }) {
-  if (outputs.length === 0) return <p className="text-xs text-muted-foreground">Function không trả về dữ liệu.</p>;
+  const { t } = useLanguage();
+  if (outputs.length === 0) return <p className="text-xs text-muted-foreground">{t("Function không trả về dữ liệu.")}</p>;
   const values = outputs.length === 1 ? [result] : (result as unknown[]);
   return (
     <div className="space-y-1.5">
@@ -64,13 +67,14 @@ const PHASE_LABEL: Record<TxPhase, string> = {
 };
 
 export function TxStatus({ tx, network }: { tx: TxRecord; network: NetworkConfig | undefined }) {
+  const { t } = useLanguage();
   const busy = ["validating", "simulating", "awaiting-wallet", "submitted", "confirming"].includes(tx.phase);
   const tone = tx.phase === "success" ? "text-success" : ["reverted", "failed", "rejected"].includes(tx.phase) ? "text-destructive" : "text-warning";
   const url = tx.hash ? explorerTx(network, tx.hash) : undefined;
   return (
     <div className="space-y-1.5 rounded-md border border-border p-2.5 text-xs">
       <div className={cn("flex items-center gap-1.5 font-medium", tone)}>
-        {busy && <Loader2 className="size-3.5 animate-spin" />} {PHASE_LABEL[tx.phase]}
+        {busy && <Loader2 className="size-3.5 animate-spin" />} {t(PHASE_LABEL[tx.phase])}
         {tx.blockNumber !== undefined && <span className="font-mono text-muted-foreground">block {tx.blockNumber.toString()}</span>}
         {tx.gasUsed !== undefined && <span className="font-mono text-muted-foreground">gas {tx.gasUsed.toString()}</span>}
       </div>
@@ -79,7 +83,7 @@ export function TxStatus({ tx, network }: { tx: TxRecord; network: NetworkConfig
           <span className="truncate font-mono">{tx.hash}</span>
           <CopyButton value={tx.hash} />
           {url && (
-            <a href={url} target="_blank" rel="noreferrer noopener" className="inline-flex size-6 items-center justify-center text-muted-foreground hover:text-foreground" aria-label="Mở explorer">
+            <a href={url} target="_blank" rel="noreferrer noopener" className="inline-flex size-6 items-center justify-center text-muted-foreground hover:text-foreground" aria-label={t("Mở explorer")}>
               <ExternalLink className="size-3.5" />
             </a>
           )}
@@ -98,6 +102,7 @@ interface Pending {
 }
 
 export function FunctionCard({ item, contract, network, mode }: { item: FunctionItem; contract: ContractEntry; network: NetworkConfig; mode: "read" | "write" }) {
+  const { t } = useLanguage();
   const ws = useWorkspace();
   const wallet = useWallet();
   const { fn } = item;
@@ -142,9 +147,9 @@ export function FunctionCard({ item, contract, network, mode }: { item: Function
   // Step 1: validate + simulate + estimate; then show confirmation dialog.
   const onPrepare = async () => {
     setResult(null);
-    if (!wallet.account) return setResult({ ok: false, message: "Chưa kết nối wallet." });
+    if (!wallet.account) return setResult({ ok: false, message: t("Chưa kết nối wallet.") });
     if (wallet.chainId !== network.chainId)
-      return setResult({ ok: false, message: `Wallet đang ở chain ${wallet.chainId}, contract ở ${network.name} (${network.chainId}). Hãy chuyển network.` });
+      return setResult({ ok: false, message: t("Wallet đang ở chain {0}, contract ở {1} ({2}). Hãy chuyển network.", wallet.chainId, network.name, network.chainId) });
     let args: unknown[];
     let val = 0n;
     try {
@@ -162,17 +167,17 @@ export function FunctionCard({ item, contract, network, mode }: { item: Function
       const actual = await client.getChainId();
       if (actual !== network.chainId) {
         setLoading(false);
-        return setResult({ ok: false, message: `RPC trả về chain ID ${actual}, khác cấu hình ${network.chainId}. Đã chặn giao dịch.` });
+        return setResult({ ok: false, message: t("RPC trả về chain ID {0}, khác cấu hình {1}. Đã chặn giao dịch.", actual, network.chainId) });
       }
       try {
         await client.simulateContract({ address: contract.address, abi: [fn], functionName: fn.name, args, account: wallet.account, ...(payable ? { value: val } : {}) } as never);
       } catch (e) {
-        warnings.push(`Mô phỏng thất bại: ${describeError(e).message}`);
+        warnings.push(t("Mô phỏng thất bại: {0}", describeError(e).message));
       }
       try {
         gas = await client.estimateContractGas({ address: contract.address, abi: [fn], functionName: fn.name, args, account: wallet.account, ...(payable ? { value: val } : {}) } as never);
       } catch (e) {
-        warnings.push(`Không ước tính được gas: ${describeError(e).message}`);
+        warnings.push(t("Không ước tính được gas: {0}", describeError(e).message));
       }
     } catch (e) {
       const d = describeError(e);
@@ -188,27 +193,27 @@ export function FunctionCard({ item, contract, network, mode }: { item: Function
     if (!pending || !wallet.account) return;
     const p = pending;
     setPending(null);
-    let t: TxRecord = { id: crypto.randomUUID(), contractId: contract.id, contractName: contract.name, networkId: network.id, signature: item.signature, phase: "awaiting-wallet", createdAt: Date.now() };
-    ws.upsertTx(t);
-    setTxId(t.id);
+    let record: TxRecord = { id: crypto.randomUUID(), contractId: contract.id, contractName: contract.name, networkId: network.id, signature: item.signature, phase: "awaiting-wallet", createdAt: Date.now() };
+    ws.upsertTx(record);
+    setTxId(record.id);
     try {
-      if (wallet.chainId !== network.chainId) throw new Error("Wallet đã đổi network. Giao dịch bị chặn.");
+      if (wallet.chainId !== network.chainId) throw new Error(t("Wallet đã đổi network. Giao dịch bị chặn."));
       const wc = wallet.getClient(network);
       const hash = await wc.writeContract({ address: contract.address, abi: [fn], functionName: fn.name, args: p.args, account: wallet.account, chain: wc.chain, ...(payable ? { value: p.value } : {}) } as never);
-      t = update(t, { phase: "confirming", hash });
-      toast.message("Đã gửi giao dịch", { description: hash });
+      record = update(record, { phase: "confirming", hash });
+      toast.message(t("Đã gửi giao dịch"), { description: hash });
       try {
         const r = await getPublicClient(network).waitForTransactionReceipt({ hash, timeout: 180_000 });
-        t = update(t, { phase: r.status === "success" ? "success" : "reverted", blockNumber: r.blockNumber, gasUsed: r.gasUsed });
-        if (r.status === "success") toast.success(`${fn.name}: thành công`);
+        record = update(record, { phase: r.status === "success" ? "success" : "reverted", blockNumber: r.blockNumber, gasUsed: r.gasUsed });
+        if (r.status === "success") toast.success(t("{0}: thành công", fn.name));
         else toast.error(`${fn.name}: reverted`);
       } catch (e) {
         const d = describeError(e);
-        update(t, { phase: "submitted", error: `Chưa lấy được receipt (${d.message}). Giao dịch có thể vẫn đang được xử lý — kiểm tra hash, KHÔNG gửi lại.`, ...(d.detail ? { detail: d.detail } : {}) });
+        update(record, { phase: "submitted", error: t("Chưa lấy được receipt ({0}). Giao dịch có thể vẫn đang được xử lý — kiểm tra hash, KHÔNG gửi lại.", t(d.message)), ...(d.detail ? { detail: d.detail } : {}) });
       }
     } catch (e) {
       const d = describeError(e);
-      update(t, { phase: d.rejected ? "rejected" : "failed", error: d.message, ...(d.detail ? { detail: d.detail } : {}) });
+      update(record, { phase: d.rejected ? "rejected" : "failed", error: d.message, ...(d.detail ? { detail: d.detail } : {}) });
     }
   };
 
@@ -229,16 +234,16 @@ export function FunctionCard({ item, contract, network, mode }: { item: Function
       {open && (
         <div className="space-y-3 border-t border-border p-3">
           {item.unsupported ? (
-            <Notice>{item.unsupported}</Notice>
+            <Notice>{t(item.unsupported)}</Notice>
           ) : (
             <>
-              {fn.inputs.length === 0 && <p className="text-xs text-muted-foreground">Không có tham số.</p>}
+              {fn.inputs.length === 0 && <p className="text-xs text-muted-foreground">{t("Không có tham số.")}</p>}
               {fn.inputs.map((p, i) => (
                 <ParamField key={i} p={p} i={i} value={raw[i] ?? ""} onChange={(v) => setRaw((r) => r.map((x, j) => (j === i ? v : x)))} />
               ))}
               {payable && (
                 <label className="block space-y-1">
-                  <span className="text-xs text-muted-foreground">Giá trị gửi kèm ({network.currencySymbol})</span>
+                  <span className="text-xs text-muted-foreground">{t("Giá trị gửi kèm (")}{network.currencySymbol})</span>
                   <Input className="font-mono text-xs" value={value} onChange={(e) => setValue(e.target.value)} placeholder="0.0" inputMode="decimal" />
                 </label>
               )}
@@ -249,10 +254,10 @@ export function FunctionCard({ item, contract, network, mode }: { item: Function
                   </Button>
                 ) : (
                   <Button size="sm" onClick={onPrepare} disabled={loading || blocked || !!busyTx}>
-                    {loading && <Loader2 className="size-3.5 animate-spin" />} {loading ? "Đang mô phỏng…" : "Write…"}
+                    {loading && <Loader2 className="size-3.5 animate-spin" />} {loading ? t("Đang mô phỏng…") : "Write…"}
                   </Button>
                 )}
-                {rpc?.kind === "error" && <span className="text-xs text-destructive">RPC đang lỗi</span>}
+                {rpc?.kind === "error" && <span className="text-xs text-destructive">{t("RPC đang lỗi")}</span>}
               </div>
               {result?.ok && <OutputView outputs={fn.outputs} result={result.data} />}
               {result && !result.ok && <ErrorBox message={result.message} detail={result.detail} />}
@@ -265,28 +270,28 @@ export function FunctionCard({ item, contract, network, mode }: { item: Function
       <Dialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Xác nhận giao dịch</DialogTitle>
+            <DialogTitle>{t("Xác nhận giao dịch")}</DialogTitle>
           </DialogHeader>
           {pending && (
             <div className="space-y-2 text-sm">
               <Row k="Contract" v={contract.name} />
-              <Row k="Địa chỉ" v={contract.address} mono />
+              <Row k={t("Địa chỉ")} v={contract.address} mono />
               <Row k="Network" v={`${network.name} (${network.chainId})`} />
               <Row k="Function" v={item.signature} mono />
               {fn.inputs.map((p, i) => (
                 <Row key={i} k={p.name || `arg${i}`} v={stringify(pending.args[i])} mono />
               ))}
               {payable && <Row k="Value" v={`${formatUnits(pending.value, network.currencyDecimals)} ${network.currencySymbol}`} mono />}
-              <Row k="Gas ước tính" v={pending.gas !== undefined ? pending.gas.toString() : "không có"} mono />
+              <Row k={t("Gas ước tính")} v={pending.gas !== undefined ? pending.gas.toString() : t("không có")} mono />
               {pending.warnings.map((w, i) => (
-                <Notice key={i}>{w}</Notice>
+                <Notice key={i}>{t(w)}</Notice>
               ))}
-              <p className="text-xs text-muted-foreground">Wallet sẽ hiển thị xác nhận cuối cùng. Giao dịch chỉ được gửi sau khi bạn ký.</p>
+              <p className="text-xs text-muted-foreground">{t("Wallet sẽ hiển thị xác nhận cuối cùng. Giao dịch chỉ được gửi sau khi bạn ký.")}</p>
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setPending(null)}>Hủy</Button>
-            <Button onClick={onSend}>Gửi tới wallet</Button>
+            <Button variant="ghost" onClick={() => setPending(null)}>{t("Hủy")}</Button>
+            <Button onClick={onSend}>{t("Gửi tới wallet")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
