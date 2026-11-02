@@ -148,3 +148,8 @@
     color: var(--color-foreground);
   }
 }
+
+/* Hide the badge injected by Lovable hosting (not part of this app). */
+#lovable-badge {
+  display: none !important;
+}
