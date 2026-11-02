@@ -193,27 +193,27 @@ export function FunctionCard({ item, contract, network, mode }: { item: Function
     if (!pending || !wallet.account) return;
     const p = pending;
     setPending(null);
-    let t: TxRecord = { id: crypto.randomUUID(), contractId: contract.id, contractName: contract.name, networkId: network.id, signature: item.signature, phase: "awaiting-wallet", createdAt: Date.now() };
-    ws.upsertTx(t);
-    setTxId(t.id);
+    let record: TxRecord = { id: crypto.randomUUID(), contractId: contract.id, contractName: contract.name, networkId: network.id, signature: item.signature, phase: "awaiting-wallet", createdAt: Date.now() };
+    ws.upsertTx(record);
+    setTxId(record.id);
     try {
       if (wallet.chainId !== network.chainId) throw new Error(t("Wallet đã đổi network. Giao dịch bị chặn."));
       const wc = wallet.getClient(network);
       const hash = await wc.writeContract({ address: contract.address, abi: [fn], functionName: fn.name, args: p.args, account: wallet.account, chain: wc.chain, ...(payable ? { value: p.value } : {}) } as never);
-      t = update(t, { phase: "confirming", hash });
+      record = update(record, { phase: "confirming", hash });
       toast.message(t("Đã gửi giao dịch"), { description: hash });
       try {
         const r = await getPublicClient(network).waitForTransactionReceipt({ hash, timeout: 180_000 });
-        t = update(t, { phase: r.status === "success" ? "success" : "reverted", blockNumber: r.blockNumber, gasUsed: r.gasUsed });
+        record = update(record, { phase: r.status === "success" ? "success" : "reverted", blockNumber: r.blockNumber, gasUsed: r.gasUsed });
         if (r.status === "success") toast.success(t("{0}: thành công", fn.name));
         else toast.error(`${fn.name}: reverted`);
       } catch (e) {
         const d = describeError(e);
-        update(t, { phase: "submitted", error: t("Chưa lấy được receipt ({0}). Giao dịch có thể vẫn đang được xử lý — kiểm tra hash, KHÔNG gửi lại.", d.message), ...(d.detail ? { detail: d.detail } : {}) });
+        update(record, { phase: "submitted", error: t("Chưa lấy được receipt ({0}). Giao dịch có thể vẫn đang được xử lý — kiểm tra hash, KHÔNG gửi lại.", t(d.message)), ...(d.detail ? { detail: d.detail } : {}) });
       }
     } catch (e) {
       const d = describeError(e);
-      update(t, { phase: d.rejected ? "rejected" : "failed", error: d.message, ...(d.detail ? { detail: d.detail } : {}) });
+      update(record, { phase: d.rejected ? "rejected" : "failed", error: d.message, ...(d.detail ? { detail: d.detail } : {}) });
     }
   };
 

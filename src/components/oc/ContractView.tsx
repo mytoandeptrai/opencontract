@@ -42,7 +42,7 @@ function WalletGuard({ network }: { network: NetworkConfig }) {
   if (!w.account)
     return (
       <Notice>
-        {t("Chưa kết nối wallet.")} <button className="underline" onClick={() => void w.connect().catch((e: Error) => alertErr(e))}>{t("Kết nối")}</button> {t("để gửi giao dịch.")} </Notice>
+        {t("Chưa kết nối wallet.")} <Button variant="link" size="sm" onClick={() => void w.connect().catch((e: Error) => toast.error(t(e.message)))}>{t("Kết nối")}</Button> {t("để gửi giao dịch.")} </Notice>
     );
   if (w.chainId !== network.chainId)
     return (
@@ -55,7 +55,7 @@ function WalletGuard({ network }: { network: NetworkConfig }) {
               const actual = await w.switchTo(network);
               if (actual !== network.chainId) alertErr(new Error(t("Wallet vẫn ở chain {0}.", actual)));
             } catch (e) {
-              alertErr(e as Error);
+              toast.error(t((e as Error).message));
             }
           }}
         >
