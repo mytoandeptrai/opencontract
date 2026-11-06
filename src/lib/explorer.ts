@@ -110,7 +110,7 @@ async function fetchExplorerAbi(network: NetworkConfig, address: string, adapter
 
   let response: Response;
   try {
-    response = await fetch(request.url, { method: "GET", headers: request.headers, signal });
+    response = await fetch(request.url, { method: "GET", headers: request.headers, ...(signal ? { signal } : {}) });
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") return failure("Đã hết thời gian chờ Explorer API.");
     return failure("Không thể kết nối Explorer API trong trình duyệt. Hãy kiểm tra CORS và URL API.");

@@ -1,6 +1,6 @@
 import { useLanguage } from "@/hooks/use-language";
 import { useEffect, useRef, useState } from "react";
-import { getAddress, isAddress } from "viem";
+import { getAddress, isAddress, type Abi } from "viem";
 import { Loader2, Search, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -25,9 +25,10 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
   const [address, setAddress] = useState("");
   const [abiText, setAbiText] = useState("");
   const [fromFile, setFromFile] = useState(false);
+  const [fromExplorer, setFromExplorer] = useState(false);
   const [err, setErr] = useState<Record<string, string>>({});
   const [replaceOpen, setReplaceOpen] = useState(false);
-  const [detectedAbi, setDetectedAbi] = useState<{ abi: import("viem").Abi; warnings: string[] } | null>(null);
+  const [detectedAbi, setDetectedAbi] = useState<{ abi: Abi; warnings: string[] } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const abiTextRef = useRef(abiText);
   const targetRef = useRef("");
@@ -41,6 +42,7 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
     if (!open) return;
     setErr({});
     setFromFile(false);
+    setFromExplorer(false);
     setDetectedAbi(null);
     setReplaceOpen(false);
     resetDetection();
@@ -61,7 +63,8 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
     resetDetection();
   }, [networkId, address, resetDetection]);
 
-  const parsed = abiText.trim() ? parseAbiInput(abiText, fromFile) : null;
+  const parsedResult = abiText.trim() ? parseAbiInput(abiText, fromFile) : null;
+  const parsed = parsedResult?.ok && fromExplorer ? { ...parsedResult, source: "explorer" as const } : parsedResult;
 
   const startDetection = async () => {
     if (!selectedNetwork || !canAutoDetectAbi(selectedNetwork, address)) return;
@@ -75,6 +78,7 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
     }
     setAbiText(JSON.stringify(result.abi, null, 2));
     setFromFile(false);
+    setFromExplorer(true);
     setErr((current) => ({ ...current, abi: "" }));
     toast.success(t("Đã dò và kiểm tra ABI thành công."));
   };
@@ -83,6 +87,7 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
     if (!detectedAbi) return;
     setAbiText(JSON.stringify(detectedAbi.abi, null, 2));
     setFromFile(false);
+    setFromExplorer(true);
     setErr((current) => ({ ...current, abi: "" }));
     setDetectedAbi(null);
     setReplaceOpen(false);
@@ -162,12 +167,13 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
                     if (!f) return;
                     setAbiText(await f.text());
                     setFromFile(true);
+                    setFromExplorer(false);
                     if (!name) setName(f.name.replace(/\.json$/i, ""));
                     e.target.value = "";
                   }}
                 />
               </div>
-              <Textarea id="c-abi" value={abiText} onChange={(e) => { setAbiText(e.target.value); setFromFile(false); }} rows={10} className="font-mono text-xs" placeholder='[{"type":"function","name":"balanceOf",…}]' spellCheck={false} />
+              <Textarea id="c-abi" value={abiText} onChange={(e) => { setAbiText(e.target.value); setFromFile(false); setFromExplorer(false); }} rows={10} className="font-mono text-xs" placeholder='[{"type":"function","name":"balanceOf",…}]' spellCheck={false} />
               {parsed && !parsed.ok && <ErrorBox message={parsed.error} />}
               {parsed?.ok && (
                 <p className="text-xs text-success">
@@ -185,7 +191,7 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
                 <div className="space-y-2" role="status">
                   <ErrorBox message={detectState.message} detail={detectState.detail} />
                   {canAutoDetectAbi(selectedNetwork, address) && (
-                    <Button type="button" size="sm" variant="outline" onClick={() => void startDetection()} disabled={detectState.kind === "loading"}>
+                    <Button type="button" size="sm" variant="outline" onClick={() => void startDetection()}>
                       {t("Thử lại")}
                     </Button>
                   )}
