@@ -10,6 +10,8 @@ export interface NetworkDraft {
   currencySymbol: string;
   currencyDecimals: string;
   explorerUrl: string;
+  explorerApiUrl: string;
+  explorerApiKey: string;
   color: string;
 }
 
@@ -36,6 +38,7 @@ export function validateNetworkDraft(d: NetworkDraft): Partial<Record<keyof Netw
   if (!/^\d+$/.test(d.currencyDecimals.trim()) || Number(d.currencyDecimals) > 36)
     e.currencyDecimals = "0–36";
   if (d.explorerUrl.trim() && !isHttpUrl(d.explorerUrl.trim())) e.explorerUrl = "URL không hợp lệ";
+  if (d.explorerApiUrl.trim() && !isHttpUrl(d.explorerApiUrl.trim())) e.explorerApiUrl = "URL không hợp lệ";
   return e;
 }
 
@@ -101,12 +104,12 @@ export function maskRpc(url: string): string {
 }
 
 export const PRESETS: Omit<NetworkConfig, "id">[] = [
-  { name: "Ethereum", chainId: 1, rpcUrl: "https://ethereum-rpc.publicnode.com", currencyName: "Ether", currencySymbol: "ETH", currencyDecimals: 18, explorerUrl: "https://etherscan.io", color: "#7c8cf8" },
-  { name: "Sepolia", chainId: 11155111, rpcUrl: "https://ethereum-sepolia-rpc.publicnode.com", currencyName: "Sepolia Ether", currencySymbol: "ETH", currencyDecimals: 18, explorerUrl: "https://sepolia.etherscan.io", color: "#a3a3ff" },
-  { name: "Base", chainId: 8453, rpcUrl: "https://mainnet.base.org", currencyName: "Ether", currencySymbol: "ETH", currencyDecimals: 18, explorerUrl: "https://basescan.org", color: "#3b82f6" },
-  { name: "Arbitrum One", chainId: 42161, rpcUrl: "https://arb1.arbitrum.io/rpc", currencyName: "Ether", currencySymbol: "ETH", currencyDecimals: 18, explorerUrl: "https://arbiscan.io", color: "#38bdf8" },
-  { name: "Optimism", chainId: 10, rpcUrl: "https://mainnet.optimism.io", currencyName: "Ether", currencySymbol: "ETH", currencyDecimals: 18, explorerUrl: "https://optimistic.etherscan.io", color: "#f87171" },
-  { name: "Polygon", chainId: 137, rpcUrl: "https://polygon-rpc.com", currencyName: "POL", currencySymbol: "POL", currencyDecimals: 18, explorerUrl: "https://polygonscan.com", color: "#a78bfa" },
-  { name: "BNB Smart Chain", chainId: 56, rpcUrl: "https://bsc-dataseed.binance.org", currencyName: "BNB", currencySymbol: "BNB", currencyDecimals: 18, explorerUrl: "https://bscscan.com", color: "#facc15" },
+  { name: "Ethereum", chainId: 1, rpcUrl: "https://ethereum-rpc.publicnode.com", currencyName: "Ether", currencySymbol: "ETH", currencyDecimals: 18, explorerUrl: "https://etherscan.io", explorerApiUrl: "https://api.etherscan.io/v2/api", color: "#7c8cf8" },
+  { name: "Sepolia", chainId: 11155111, rpcUrl: "https://ethereum-sepolia-rpc.publicnode.com", currencyName: "Sepolia Ether", currencySymbol: "ETH", currencyDecimals: 18, explorerUrl: "https://sepolia.etherscan.io", explorerApiUrl: "https://api.etherscan.io/v2/api", color: "#a3a3ff" },
+  { name: "Base", chainId: 8453, rpcUrl: "https://mainnet.base.org", currencyName: "Ether", currencySymbol: "ETH", currencyDecimals: 18, explorerUrl: "https://basescan.org", explorerApiUrl: "https://api.etherscan.io/v2/api", color: "#3b82f6" },
+  { name: "Arbitrum One", chainId: 42161, rpcUrl: "https://arb1.arbitrum.io/rpc", currencyName: "Ether", currencySymbol: "ETH", currencyDecimals: 18, explorerUrl: "https://arbiscan.io", explorerApiUrl: "https://api.etherscan.io/v2/api", color: "#38bdf8" },
+  { name: "Optimism", chainId: 10, rpcUrl: "https://mainnet.optimism.io", currencyName: "Ether", currencySymbol: "ETH", currencyDecimals: 18, explorerUrl: "https://optimistic.etherscan.io", explorerApiUrl: "https://api.etherscan.io/v2/api", color: "#f87171" },
+  { name: "Polygon", chainId: 137, rpcUrl: "https://polygon-rpc.com", currencyName: "POL", currencySymbol: "POL", currencyDecimals: 18, explorerUrl: "https://polygonscan.com", explorerApiUrl: "https://api.etherscan.io/v2/api", color: "#a78bfa" },
+  { name: "BNB Smart Chain", chainId: 56, rpcUrl: "https://bsc-dataseed.binance.org", currencyName: "BNB", currencySymbol: "BNB", currencyDecimals: 18, explorerUrl: "https://bscscan.com", explorerApiUrl: "https://api.etherscan.io/v2/api", color: "#facc15" },
   { name: "Localhost 8545", chainId: 31337, rpcUrl: "http://127.0.0.1:8545", currencyName: "Ether", currencySymbol: "ETH", currencyDecimals: 18, color: "#4ade80" },
 ];
