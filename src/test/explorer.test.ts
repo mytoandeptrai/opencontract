@@ -76,6 +76,7 @@ describe("Explorer ABI detection", () => {
     const result = await detectContractAbi(network, address);
 
     expect(result.kind).toBe("not-found");
+    if (result.kind !== "not-found") throw new Error("Expected an unverified ABI result");
     expect(result.message).toBe("Không tìm thấy ABI. Contract có thể chưa được xác minh trên Explorer đã chọn.");
   });
 
