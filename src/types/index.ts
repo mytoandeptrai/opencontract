@@ -16,10 +16,12 @@ export interface NetworkConfig {
   currencySymbol: string;
   currencyDecimals: number;
   explorerUrl?: string;
+  explorerApiUrl?: string;
+  explorerApiKey?: string;
   color: string;
 }
 
-export type AbiSource = "paste" | "file" | "hardhat" | "foundry";
+export type AbiSource = "paste" | "file" | "hardhat" | "foundry" | "explorer";
 
 export type BytecodeStatus =
   | { kind: "unknown" }
