@@ -8,10 +8,10 @@ import { PRESETS, validateNetworkDraft, type NetworkDraft } from "@/lib/chain";
 import { useWorkspace } from "@/hooks/use-workspace";
 import type { NetworkConfig } from "@/types";
 
-const EMPTY: NetworkDraft = { name: "", chainId: "", rpcUrl: "", currencyName: "Ether", currencySymbol: "ETH", currencyDecimals: "18", explorerUrl: "", color: "#4ade80" };
+const EMPTY: NetworkDraft = { name: "", chainId: "", rpcUrl: "", currencyName: "Ether", currencySymbol: "ETH", currencyDecimals: "18", explorerUrl: "", explorerApiUrl: "", explorerApiKey: "", color: "#4ade80" };
 
 function toDraft(n: Omit<NetworkConfig, "id">): NetworkDraft {
-  return { name: n.name, chainId: String(n.chainId), rpcUrl: n.rpcUrl, currencyName: n.currencyName, currencySymbol: n.currencySymbol, currencyDecimals: String(n.currencyDecimals), explorerUrl: n.explorerUrl ?? "", color: n.color };
+  return { name: n.name, chainId: String(n.chainId), rpcUrl: n.rpcUrl, currencyName: n.currencyName, currencySymbol: n.currencySymbol, currencyDecimals: String(n.currencyDecimals), explorerUrl: n.explorerUrl ?? "", explorerApiUrl: n.explorerApiUrl ?? "", explorerApiKey: n.explorerApiKey ?? "", color: n.color };
 }
 
 export function NetworkDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChange: (o: boolean) => void; editing?: NetworkConfig | undefined }) {
@@ -48,6 +48,8 @@ export function NetworkDialog({ open, onOpenChange, editing }: { open: boolean; 
       currencyDecimals: Number(d.currencyDecimals),
       color: d.color,
       ...(d.explorerUrl.trim() ? { explorerUrl: d.explorerUrl.trim() } : {}),
+      ...(d.explorerApiUrl.trim() ? { explorerApiUrl: d.explorerApiUrl.trim() } : {}),
+      ...(d.explorerApiKey.trim() ? { explorerApiKey: d.explorerApiKey.trim() } : {}),
     };
     if (editing) ws.updateNetwork({ ...n, id: editing.id });
     else ws.addNetwork(n);
@@ -84,8 +86,10 @@ export function NetworkDialog({ open, onOpenChange, editing }: { open: boolean; 
           {field("currencySymbol", t("Ký hiệu"))}
           {field("currencyDecimals", "Decimals", { inputMode: "numeric" })}
           {field("explorerUrl", t("Block explorer (tùy chọn)"), { placeholder: "https://…" })}
+          <div className="col-span-2">{field("explorerApiUrl", t("Explorer ABI API URL"), { placeholder: "https://api.etherscan.io/v2/api", className: "font-mono text-xs", autoComplete: "off", spellCheck: false })}</div>
+          <div className="col-span-2">{field("explorerApiKey", t("Explorer API key (tùy chọn)"), { type: "password", autoComplete: "new-password", spellCheck: false })}</div>
         </div>
-        <p className="text-[11px] text-muted-foreground">{t("RPC URL có thể chứa API key. Nó chỉ nằm trong bộ nhớ của tab này và chỉ được gửi tới chính endpoint đó.")}</p>
+        <p className="text-[11px] text-muted-foreground">{t("RPC URL và Explorer API key chỉ nằm trong bộ nhớ của tab này. API key chỉ được gửi tới Explorer API URL đã cấu hình.")}</p>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("Hủy")}</Button>
           <Button onClick={submit}>{editing ? t("Lưu & kiểm tra") : t("Thêm & kiểm tra RPC")}</Button>

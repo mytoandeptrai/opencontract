@@ -1,17 +1,21 @@
 import { useLanguage } from "@/hooks/use-language";
 import { useEffect, useRef, useState } from "react";
 import { getAddress, isAddress } from "viem";
-import { Upload } from "lucide-react";
+import { Loader2, Search, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { parseAbiInput } from "@/lib/abi";
+import { canAutoDetectAbi } from "@/lib/explorer";
+import { useAutoDetectAbi } from "@/hooks/use-auto-detect-abi";
 import { useWorkspace } from "@/hooks/use-workspace";
 import type { ContractEntry } from "@/types";
 import { ErrorBox, Notice } from "./status";
+import { toast } from "sonner";
 
 export function ContractDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChange: (o: boolean) => void; editing?: ContractEntry | undefined }) {
   const { t } = useLanguage();
@@ -22,12 +26,24 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
   const [abiText, setAbiText] = useState("");
   const [fromFile, setFromFile] = useState(false);
   const [err, setErr] = useState<Record<string, string>>({});
+  const [replaceOpen, setReplaceOpen] = useState(false);
+  const [detectedAbi, setDetectedAbi] = useState<{ abi: import("viem").Abi; warnings: string[] } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const abiTextRef = useRef(abiText);
+  const targetRef = useRef("");
+  const { state: detectState, detect, reset: resetDetection } = useAutoDetectAbi();
+  const selectedNetwork = ws.networks.find((network) => network.id === networkId);
+  const target = `${networkId}|${address.trim()}`;
+  abiTextRef.current = abiText;
+  targetRef.current = target;
 
   useEffect(() => {
     if (!open) return;
     setErr({});
     setFromFile(false);
+    setDetectedAbi(null);
+    setReplaceOpen(false);
+    resetDetection();
     if (editing) {
       setName(editing.name);
       setNetworkId(editing.networkId);
@@ -39,9 +55,39 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
       setAddress("");
       setAbiText("");
     }
-  }, [open, editing, ws.activeNetworkId, ws.networks]);
+  }, [open, editing, ws.activeNetworkId, ws.networks, resetDetection]);
+
+  useEffect(() => {
+    resetDetection();
+  }, [networkId, address, resetDetection]);
 
   const parsed = abiText.trim() ? parseAbiInput(abiText, fromFile) : null;
+
+  const startDetection = async () => {
+    if (!selectedNetwork || !canAutoDetectAbi(selectedNetwork, address)) return;
+    const requestTarget = targetRef.current;
+    const result = await detect(selectedNetwork, address.trim());
+    if (!result || targetRef.current !== requestTarget) return;
+    if (abiTextRef.current.trim()) {
+      setDetectedAbi({ abi: result.abi, warnings: result.warnings });
+      setReplaceOpen(true);
+      return;
+    }
+    setAbiText(JSON.stringify(result.abi, null, 2));
+    setFromFile(false);
+    setErr((current) => ({ ...current, abi: "" }));
+    toast.success(t("Đã dò và kiểm tra ABI thành công."));
+  };
+
+  const acceptDetectedAbi = () => {
+    if (!detectedAbi) return;
+    setAbiText(JSON.stringify(detectedAbi.abi, null, 2));
+    setFromFile(false);
+    setErr((current) => ({ ...current, abi: "" }));
+    setDetectedAbi(null);
+    setReplaceOpen(false);
+    toast.success(t("Đã dò và kiểm tra ABI thành công."));
+  };
 
   const submit = () => {
     const e: Record<string, string> = {};
@@ -95,8 +141,17 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <Label className="text-xs" htmlFor="c-abi">{t("ABI JSON hoặc artifact Hardhat / Foundry")}</Label>
-                <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
-                  <Upload className="size-3.5" /> {t("Tải file .json")} </Button>
+                <div className="flex flex-wrap gap-2">
+                  {canAutoDetectAbi(selectedNetwork, address) && (
+                    <Button type="button" variant="outline" size="sm" onClick={() => void startDetection()} disabled={detectState.kind === "loading"}>
+                      {detectState.kind === "loading" ? <Loader2 className="size-3.5 animate-spin" /> : <Search className="size-3.5" />}
+                      {detectState.kind === "loading" ? t("Đang dò ABI…") : t("Tự dò ABI")}
+                    </Button>
+                  )}
+                  <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                    <Upload className="size-3.5" /> {t("Tải file .json")}
+                  </Button>
+                </div>
                 <input
                   ref={fileRef}
                   type="file"
@@ -121,6 +176,21 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
                 </p>
               )}
               {err["abi"] && !parsed && <p className="text-xs text-destructive">{err["abi"]}</p>}
+              {detectState.kind === "success" && (
+                <p role="status" className="text-xs text-success">
+                  {t("Đã dò và kiểm tra ABI thành công.")} {detectState.functions} {t("function")}, {detectState.events} {t("event")}, {detectState.errors} {t("error")}
+                </p>
+              )}
+              {(detectState.kind === "error" || detectState.kind === "not-found") && (
+                <div className="space-y-2" role="status">
+                  <ErrorBox message={detectState.message} detail={detectState.detail} />
+                  {canAutoDetectAbi(selectedNetwork, address) && (
+                    <Button type="button" size="sm" variant="outline" onClick={() => void startDetection()} disabled={detectState.kind === "loading"}>
+                      {t("Thử lại")}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -129,6 +199,18 @@ export function ContractDialog({ open, onOpenChange, editing }: { open: boolean;
           <Button onClick={submit} disabled={ws.networks.length === 0}>{editing ? t("Lưu") : t("Thêm contract")}</Button>
         </DialogFooter>
       </DialogContent>
+      <AlertDialog open={replaceOpen} onOpenChange={setReplaceOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("Thay thế ABI hiện tại?")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("Trình soạn ABI đã có nội dung. Bạn có muốn thay nội dung đó bằng ABI lấy từ Explorer không?")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDetectedAbi(null)}>{t("Giữ ABI hiện tại")}</AlertDialogCancel>
+            <AlertDialogAction onClick={acceptDetectedAbi}>{t("Thay thế ABI")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
