@@ -3,14 +3,16 @@ import type { NetworkConfig } from "@/types";
 import { parseAbiInput } from "./abi";
 import { getPublicClient, isHttpUrl } from "./chain";
 
-export type ExplorerAdapterKind = "etherscan-v2" | "etherscan-compatible" | "blockscout-v2" | "blockscout-universal";
+export type ExplorerAdapterKind =
+  "etherscan-v2" | "etherscan-compatible" | "blockscout-v2" | "blockscout-universal";
 
 export type DetectAbiResult =
   | { kind: "success"; abi: Abi; warnings: string[] }
   | { kind: "not-found"; message: string; detail?: string }
   | { kind: "error"; message: string; detail?: string };
 
-const ABI_NOT_FOUND = "Không tìm thấy ABI. Contract có thể chưa được xác minh trên Explorer đã chọn.";
+const ABI_NOT_FOUND =
+  "Không tìm thấy ABI. Contract có thể chưa được xác minh trên Explorer đã chọn.";
 
 function safeHttpUrl(value: string | undefined): URL | null {
   if (!value || !isHttpUrl(value)) return null;
@@ -28,7 +30,8 @@ export function getExplorerAdapterKind(apiUrl: string | undefined): ExplorerAdap
   if (!url) return null;
   const path = url.pathname.replace(/\/+$/, "");
   if (path.endsWith("/api/v2")) return "blockscout-v2";
-  if (path.endsWith("/v2/api") && url.hostname === "api.blockscout.com") return "blockscout-universal";
+  if (path.endsWith("/v2/api") && url.hostname === "api.blockscout.com")
+    return "blockscout-universal";
   if (path.endsWith("/v2/api")) return "etherscan-v2";
   if (path.endsWith("/api")) return "etherscan-compatible";
   return null;
@@ -47,15 +50,27 @@ function failure(message: string, detail?: string): DetectAbiResult {
 }
 
 function notFound(detail?: string): DetectAbiResult {
-  return detail ? { kind: "not-found", message: ABI_NOT_FOUND, detail } : { kind: "not-found", message: ABI_NOT_FOUND };
+  return detail
+    ? { kind: "not-found", message: ABI_NOT_FOUND, detail }
+    : { kind: "not-found", message: ABI_NOT_FOUND };
 }
 
 function classifyExplorerError(status: string, message: string, result: string): DetectAbiResult {
   const text = `${message} ${result}`.toLowerCase();
-  if (/not verified|unverified|not found|no abi|source code not verified/.test(text)) return notFound("Explorer reports no verified ABI for this address.");
-  if (/rate limit|too many requests|rate-limit/.test(text)) return failure("Explorer API đã đạt giới hạn truy vấn. Hãy thử lại sau.", `Explorer API status: ${status}`);
-  if (/invalid api.?key|missing api.?key|api.?key.*(invalid|required|missing)|unauthorized/.test(text))
-    return failure("Explorer API key không hợp lệ hoặc bị thiếu.", `Explorer API status: ${status}`);
+  if (/not verified|unverified|not found|no abi|source code not verified/.test(text))
+    return notFound("Explorer reports no verified ABI for this address.");
+  if (/rate limit|too many requests|rate-limit/.test(text))
+    return failure(
+      "Explorer API đã đạt giới hạn truy vấn. Hãy thử lại sau.",
+      `Explorer API status: ${status}`,
+    );
+  if (
+    /invalid api.?key|missing api.?key|api.?key.*(invalid|required|missing)|unauthorized/.test(text)
+  )
+    return failure(
+      "Explorer API key không hợp lệ hoặc bị thiếu.",
+      `Explorer API status: ${status}`,
+    );
   return failure("Explorer trả về phản hồi không hợp lệ.", `Explorer API status: ${status}`);
 }
 
@@ -68,7 +83,9 @@ async function readResponse(response: Response): Promise<unknown | null> {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function abiFromValue(value: unknown): DetectAbiResult {
@@ -104,42 +121,76 @@ function explorerRequest(network: NetworkConfig, address: string, adapter: Explo
   return { url: baseUrl.toString(), headers };
 }
 
-async function fetchExplorerAbi(network: NetworkConfig, address: string, adapter: ExplorerAdapterKind, signal?: AbortSignal): Promise<DetectAbiResult> {
+async function fetchExplorerAbi(
+  network: NetworkConfig,
+  address: string,
+  adapter: ExplorerAdapterKind,
+  signal?: AbortSignal,
+): Promise<DetectAbiResult> {
   const request = explorerRequest(network, address, adapter);
   if (!request) return failure("Explorer API không được hỗ trợ.");
 
   let response: Response;
   try {
-    response = await fetch(request.url, { method: "GET", headers: request.headers, ...(signal ? { signal } : {}) });
+    response = await fetch(request.url, {
+      method: "GET",
+      headers: request.headers,
+      ...(signal ? { signal } : {}),
+    });
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") return failure("Đã hết thời gian chờ Explorer API.");
-    return failure("Không thể kết nối Explorer API trong trình duyệt. Hãy kiểm tra CORS và URL API.");
+    if (error instanceof Error && error.name === "AbortError")
+      return failure("Đã hết thời gian chờ Explorer API.");
+    return failure(
+      "Không thể kết nối Explorer API trong trình duyệt. Hãy kiểm tra CORS và URL API.",
+    );
   }
 
-  if (response.status === 429) return failure("Explorer API đã đạt giới hạn truy vấn. Hãy thử lại sau.", "HTTP 429");
-  if ([401, 402, 403].includes(response.status)) return failure("Explorer API key không hợp lệ hoặc bị thiếu.", `HTTP ${response.status}`);
+  if (response.status === 429)
+    return failure("Explorer API đã đạt giới hạn truy vấn. Hãy thử lại sau.", "HTTP 429");
+  if ([401, 402, 403].includes(response.status))
+    return failure("Explorer API key không hợp lệ hoặc bị thiếu.", `HTTP ${response.status}`);
   if (response.status === 404) return notFound("HTTP 404");
   if (!response.ok) return failure("Explorer API hiện không khả dụng.", `HTTP ${response.status}`);
 
   const payload = await readResponse(response);
   const record = asRecord(payload);
-  if (!record) return failure("Explorer trả về phản hồi không hợp lệ.", "Response was not a JSON object.");
+  if (!record)
+    return failure("Explorer trả về phản hồi không hợp lệ.", "Response was not a JSON object.");
 
   if (adapter === "blockscout-v2") {
-    if (record["is_verified"] === false || record["abi"] === null || record["abi"] === undefined) return notFound();
+    if (record["is_verified"] === false || record["abi"] === null || record["abi"] === undefined)
+      return notFound();
     return abiFromValue(record["abi"]);
   }
 
   const status = String(record["status"] ?? "");
-  if (status !== "1") return classifyExplorerError(status || "unknown", String(record["message"] ?? ""), String(record["result"] ?? ""));
+  if (status !== "1")
+    return classifyExplorerError(
+      status || "unknown",
+      String(record["message"] ?? ""),
+      String(record["result"] ?? ""),
+    );
   return abiFromValue(record["result"]);
 }
 
-export async function detectContractAbi(network: NetworkConfig, address: string, signal?: AbortSignal): Promise<DetectAbiResult> {
-  if (!isAddress(address.trim(), { strict: false })) return failure("Địa chỉ contract không hợp lệ.");
-  if (!Number.isSafeInteger(network.chainId) || network.chainId <= 0 || !safeHttpUrl(network.rpcUrl))
+export async function detectContractAbi(
+  network: NetworkConfig,
+  address: string,
+  signal?: AbortSignal,
+): Promise<DetectAbiResult> {
+  if (!isAddress(address.trim(), { strict: false }))
+    return failure("Địa chỉ contract không hợp lệ.");
+  if (
+    !Number.isSafeInteger(network.chainId) ||
+    network.chainId <= 0 ||
+    !safeHttpUrl(network.rpcUrl)
+  )
     return failure("Hãy kiểm tra RPC URL và Chain ID của network.");
-  if (!safeHttpUrl(network.explorerUrl) || !safeHttpUrl(network.explorerApiUrl) || !network.explorerApiKey?.trim())
+  if (
+    !safeHttpUrl(network.explorerUrl) ||
+    !safeHttpUrl(network.explorerApiUrl) ||
+    !network.explorerApiKey?.trim()
+  )
     return failure("Hãy cấu hình Explorer API URL và API key để dò ABI.");
 
   const adapter = getExplorerAdapterKind(network.explorerApiUrl);
@@ -150,13 +201,17 @@ export async function detectContractAbi(network: NetworkConfig, address: string,
     const client = getPublicClient(network);
     const actualChainId = await client.getChainId();
     if (actualChainId !== network.chainId) {
-      return failure("RPC trả về Chain ID khác với network đã chọn.", `Expected ${network.chainId}; received ${actualChainId}.`);
+      return failure(
+        "RPC trả về Chain ID khác với network đã chọn.",
+        `Expected ${network.chainId}; received ${actualChainId}.`,
+      );
     }
     bytecode = await client.getBytecode({ address: getAddress(address.trim()) });
   } catch {
     return failure("Không thể kết nối RPC của network đã chọn.");
   }
-  if (!bytecode || bytecode === "0x") return failure("Không tìm thấy bytecode tại địa chỉ này trên network đã chọn.");
+  if (!bytecode || bytecode === "0x")
+    return failure("Không tìm thấy bytecode tại địa chỉ này trên network đã chọn.");
 
   return fetchExplorerAbi(network, getAddress(address.trim()), adapter, signal);
 }

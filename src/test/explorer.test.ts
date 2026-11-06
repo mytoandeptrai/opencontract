@@ -45,11 +45,24 @@ describe("Explorer ABI detection", () => {
   it("uses the selected chain and address, checks deployed code, and validates the returned ABI", async () => {
     getChainId.mockResolvedValue(11155111);
     getBytecode.mockResolvedValue("0x6000");
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({
-      status: "1",
-      message: "OK",
-      result: JSON.stringify([{ type: "function", name: "balanceOf", inputs: [], outputs: [], stateMutability: "view" }]),
-    }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: "1",
+          message: "OK",
+          result: JSON.stringify([
+            {
+              type: "function",
+              name: "balanceOf",
+              inputs: [],
+              outputs: [],
+              stateMutability: "view",
+            },
+          ]),
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await detectContractAbi(network, address);
@@ -67,22 +80,32 @@ describe("Explorer ABI detection", () => {
   it("reports an unverified contract without treating the response as ABI", async () => {
     getChainId.mockResolvedValue(11155111);
     getBytecode.mockResolvedValue("0x6000");
-    vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({
-      status: "0",
-      message: "NOTOK",
-      result: "Contract source code not verified",
-    }), { status: 200, headers: { "Content-Type": "application/json" } })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            status: "0",
+            message: "NOTOK",
+            result: "Contract source code not verified",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ),
+    );
 
     const result = await detectContractAbi(network, address);
 
     expect(result.kind).toBe("not-found");
     if (result.kind !== "not-found") throw new Error("Expected an unverified ABI result");
-    expect(result.message).toBe("Không tìm thấy ABI. Contract có thể chưa được xác minh trên Explorer đã chọn.");
+    expect(result.message).toBe(
+      "Không tìm thấy ABI. Contract có thể chưa được xác minh trên Explorer đã chọn.",
+    );
   });
 
   it("identifies explicit Etherscan and Blockscout API endpoints", () => {
     expect(getExplorerAdapterKind("https://api.etherscan.io/v2/api")).toBe("etherscan-v2");
     expect(getExplorerAdapterKind("https://eth.blockscout.com/api/v2")).toBe("blockscout-v2");
-    expect(getExplorerAdapterKind("https://example.com" )).toBeNull();
+    expect(getExplorerAdapterKind("https://example.com")).toBeNull();
   });
 });
