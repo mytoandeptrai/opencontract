@@ -113,7 +113,8 @@ describe("Explorer ABI detection", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const result = await detectContractAbi({ ...network, explorerApiKey: undefined }, address);
+    const { explorerApiKey: _apiKey, ...networkWithoutKey } = network;
+    const result = await detectContractAbi(networkWithoutKey, address);
 
     expect(result.kind).toBe("success");
     const requestUrl = new URL(String(fetchMock.mock.calls[0]?.[0]));
