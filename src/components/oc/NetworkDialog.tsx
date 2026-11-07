@@ -165,7 +165,9 @@ export function NetworkDialog({
               spellCheck: false,
             })}
             <p className="mt-1 text-[11px] text-muted-foreground">
-              {t("Có thể nhập URL trang Explorer hoặc /api-docs; endpoint API sẽ được tự chuẩn hóa.")}
+              {t(
+                "Có thể nhập URL trang Explorer hoặc /api-docs; endpoint API sẽ được tự chuẩn hóa.",
+              )}
             </p>
           </div>
           <div className="col-span-2">

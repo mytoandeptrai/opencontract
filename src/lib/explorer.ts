@@ -211,10 +211,7 @@ export async function detectContractAbi(
     !safeHttpUrl(network.rpcUrl)
   )
     return failure("Hãy kiểm tra RPC URL và Chain ID của network.");
-  if (
-    !safeHttpUrl(network.rpcUrl) ||
-    !resolveExplorerApiUrl(network)
-  )
+  if (!safeHttpUrl(network.rpcUrl) || !resolveExplorerApiUrl(network))
     return failure("Hãy cấu hình RPC URL và Explorer URL hoặc Explorer API URL để dò ABI.");
 
   const adapter = getExplorerAdapterKind(resolveExplorerApiUrl(network) ?? undefined);

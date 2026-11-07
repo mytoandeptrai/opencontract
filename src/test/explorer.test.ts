@@ -57,9 +57,7 @@ describe("Explorer ABI detection", () => {
     expect(normalizeExplorerApiUrl("https://eth.blockscout.com")).toBe(
       "https://eth.blockscout.com/api/v2",
     );
-    expect(normalizeExplorerApiUrl("https://etherscan.io")).toBe(
-      "https://api.etherscan.io/v2/api",
-    );
+    expect(normalizeExplorerApiUrl("https://etherscan.io")).toBe("https://api.etherscan.io/v2/api");
   });
 
   it("uses the selected chain and address, checks deployed code, and validates the returned ABI", async () => {
@@ -106,7 +104,9 @@ describe("Explorer ABI detection", () => {
         JSON.stringify({
           status: "1",
           message: "OK",
-          result: JSON.stringify([{ type: "function", name: "balanceOf", inputs: [], outputs: [] }]),
+          result: JSON.stringify([
+            { type: "function", name: "balanceOf", inputs: [], outputs: [] },
+          ]),
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       ),
