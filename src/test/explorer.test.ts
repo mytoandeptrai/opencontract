@@ -11,7 +11,12 @@ vi.mock("@/lib/chain", async (importOriginal) => ({
   getPublicClient: () => ({ getChainId, getBytecode }),
 }));
 
-import { canAutoDetectAbi, detectContractAbi, getExplorerAdapterKind } from "@/lib/explorer";
+import {
+  canAutoDetectAbi,
+  detectContractAbi,
+  getExplorerAdapterKind,
+  normalizeExplorerApiUrl,
+} from "@/lib/explorer";
 
 const network: NetworkConfig = {
   id: "sepolia",
@@ -35,11 +40,33 @@ afterEach(() => {
 });
 
 describe("Explorer ABI detection", () => {
-  it("only offers detection with valid address, RPC, Explorer API, and key", () => {
+  it("offers detection with valid network and Explorer settings even without an API key", () => {
     expect(canAutoDetectAbi(network, address)).toBe(true);
-    expect(canAutoDetectAbi({ ...network, explorerApiKey: "" }, address)).toBe(false);
+    expect(canAutoDetectAbi({ ...network, explorerApiKey: "" }, address)).toBe(true);
+    expect(
+      canAutoDetectAbi(
+        { ...network, explorerApiUrl: "", explorerUrl: "https://eth.blockscout.com" },
+        address,
+      ),
+    ).toBe(true);
     expect(canAutoDetectAbi({ ...network, rpcUrl: "not a URL" }, address)).toBe(false);
     expect(canAutoDetectAbi(network, "not an address")).toBe(false);
+  });
+
+  it("normalizes common Explorer and API docs URLs", () => {
+    expect(normalizeExplorerApiUrl("https://explorer-test.qday.info")).toBe(
+      "https://explorer-test.qday.info/api",
+    );
+    expect(normalizeExplorerApiUrl("https://explorer-test.qday.info/api-docs")).toBe(
+      "https://explorer-test.qday.info/api",
+    );
+    expect(normalizeExplorerApiUrl("https://eth.blockscout.com")).toBe(
+      "https://eth.blockscout.com/api/v2",
+    );
+    expect(normalizeExplorerApiUrl("https://eth.blockscout.com/api")).toBe(
+      "https://eth.blockscout.com/api/v2",
+    );
+    expect(normalizeExplorerApiUrl("https://etherscan.io")).toBe("https://api.etherscan.io/v2/api");
   });
 
   it("uses the selected chain and address, checks deployed code, and validates the returned ABI", async () => {
@@ -74,7 +101,33 @@ describe("Explorer ABI detection", () => {
     expect(requestUrl.searchParams.get("chainid")).toBe("11155111");
     expect(requestUrl.searchParams.get("address")).toBe(address);
     expect(requestUrl.searchParams.get("action")).toBe("getabi");
+    expect(requestUrl.searchParams.get("apikey")).toBe("test-key");
     expect(getBytecode).toHaveBeenCalledOnce();
+  });
+
+  it("omits the API key parameter when no key is configured", async () => {
+    getChainId.mockResolvedValue(11155111);
+    getBytecode.mockResolvedValue("0x6000");
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: "1",
+          message: "OK",
+          result: JSON.stringify([
+            { type: "function", name: "balanceOf", inputs: [], outputs: [] },
+          ]),
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { explorerApiKey: _apiKey, ...networkWithoutKey } = network;
+    const result = await detectContractAbi(networkWithoutKey, address);
+
+    expect(result.kind).toBe("success");
+    const requestUrl = new URL(String(fetchMock.mock.calls[0]?.[0]));
+    expect(requestUrl.searchParams.has("apikey")).toBe(false);
   });
 
   it("reports an unverified contract without treating the response as ABI", async () => {
@@ -103,9 +156,10 @@ describe("Explorer ABI detection", () => {
     );
   });
 
-  it("identifies explicit Etherscan and Blockscout API endpoints", () => {
+  it("identifies normalized Etherscan and Blockscout endpoints", () => {
     expect(getExplorerAdapterKind("https://api.etherscan.io/v2/api")).toBe("etherscan-v2");
     expect(getExplorerAdapterKind("https://eth.blockscout.com/api/v2")).toBe("blockscout-v2");
-    expect(getExplorerAdapterKind("https://example.com")).toBeNull();
+    expect(getExplorerAdapterKind("https://eth.blockscout.com")).toBe("blockscout-v2");
+    expect(getExplorerAdapterKind("https://example.com")).toBe("etherscan-compatible");
   });
 });

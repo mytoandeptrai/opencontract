@@ -223,9 +223,11 @@ export const english: Record<string, string> = {
   Đọc: "Read",
   Ghi: "Write",
   "Explorer ABI API URL": "Explorer ABI API URL",
-  "Explorer API key (tùy chọn)": "Explorer API key (optional)",
-  "RPC URL và Explorer API key chỉ nằm trong bộ nhớ của tab này. API key chỉ được gửi tới Explorer API URL đã cấu hình.":
-    "The RPC URL and Explorer API key stay only in this tab's memory. The API key is sent only to the configured Explorer API URL.",
+  "Có thể nhập URL trang Explorer hoặc /api-docs; endpoint API sẽ được tự chuẩn hóa.":
+    "Enter an Explorer page URL or /api-docs URL; the API endpoint will be normalized automatically.",
+  "Explorer API key (không bắt buộc)": "Explorer API key (optional)",
+  "RPC URL và Explorer API key chỉ nằm trong bộ nhớ của tab này. API key không bắt buộc và chỉ được gửi tới Explorer API URL đã cấu hình.":
+    "The RPC URL and Explorer API key stay only in this tab's memory. The API key is optional and is only sent to the configured Explorer API URL.",
   "Tự dò ABI": "Auto Detect ABI",
   "Đang dò ABI…": "Detecting ABI…",
   "Đã dò và kiểm tra ABI thành công.": "ABI detected successfully.",
@@ -234,6 +236,8 @@ export const english: Record<string, string> = {
   "Explorer API đã đạt giới hạn truy vấn. Hãy thử lại sau.":
     "Explorer API rate limit exceeded. Please try again later.",
   "Explorer API key không hợp lệ hoặc bị thiếu.": "Explorer API key is missing or invalid.",
+  "Hãy cấu hình RPC URL và Explorer URL hoặc Explorer API URL để dò ABI.":
+    "Configure an RPC URL and an Explorer URL or Explorer API URL to detect an ABI.",
   "Explorer trả về phản hồi không hợp lệ.": "Explorer returned an invalid response.",
   "Explorer trả về ABI không hợp lệ.": "Explorer returned an invalid ABI.",
   "Explorer API không được hỗ trợ.": "This Explorer API is not supported.",
