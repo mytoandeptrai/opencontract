@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PRESETS, validateNetworkDraft, type NetworkDraft } from "@/lib/chain";
+import { normalizeExplorerApiUrl } from "@/lib/explorer";
 import { useWorkspace } from "@/hooks/use-workspace";
 import type { NetworkConfig } from "@/types";
 
@@ -86,6 +87,7 @@ export function NetworkDialog({
     const e = validateNetworkDraft(d);
     setErrors(e);
     if (Object.keys(e).length) return;
+    const explorerApiUrl = normalizeExplorerApiUrl(d.explorerApiUrl.trim() || d.explorerUrl.trim());
     const n = {
       name: d.name.trim(),
       chainId: Number(d.chainId),
@@ -95,7 +97,7 @@ export function NetworkDialog({
       currencyDecimals: Number(d.currencyDecimals),
       color: d.color,
       ...(d.explorerUrl.trim() ? { explorerUrl: d.explorerUrl.trim() } : {}),
-      ...(d.explorerApiUrl.trim() ? { explorerApiUrl: d.explorerApiUrl.trim() } : {}),
+      ...(explorerApiUrl ? { explorerApiUrl } : {}),
       ...(d.explorerApiKey.trim() ? { explorerApiKey: d.explorerApiKey.trim() } : {}),
     };
     if (editing) ws.updateNetwork({ ...n, id: editing.id });
@@ -157,14 +159,17 @@ export function NetworkDialog({
           {field("explorerUrl", t("Block explorer (tùy chọn)"), { placeholder: "https://…" })}
           <div className="col-span-2">
             {field("explorerApiUrl", t("Explorer ABI API URL"), {
-              placeholder: "https://api.etherscan.io/v2/api",
+              placeholder: "https://explorer.example",
               className: "font-mono text-xs",
               autoComplete: "off",
               spellCheck: false,
             })}
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {t("Có thể nhập URL trang Explorer hoặc /api-docs; endpoint API sẽ được tự chuẩn hóa.")}
+            </p>
           </div>
           <div className="col-span-2">
-            {field("explorerApiKey", t("Explorer API key (tùy chọn)"), {
+            {field("explorerApiKey", t("Explorer API key (không bắt buộc)"), {
               type: "password",
               autoComplete: "new-password",
               spellCheck: false,
@@ -173,7 +178,7 @@ export function NetworkDialog({
         </div>
         <p className="text-[11px] text-muted-foreground">
           {t(
-            "RPC URL và Explorer API key chỉ nằm trong bộ nhớ của tab này. API key chỉ được gửi tới Explorer API URL đã cấu hình.",
+            "RPC URL và Explorer API key chỉ nằm trong bộ nhớ của tab này. API key không bắt buộc và chỉ được gửi tới Explorer API URL đã cấu hình.",
           )}
         </p>
         <DialogFooter>

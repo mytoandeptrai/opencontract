@@ -25,8 +25,30 @@ function safeHttpUrl(value: string | undefined): URL | null {
   }
 }
 
+/** Convert a public Explorer page, API docs page, or API base URL into an ABI API endpoint. */
+export function normalizeExplorerApiUrl(value: string | undefined): string | null {
+  const url = safeHttpUrl(value);
+  if (!url) return null;
+
+  let path = url.pathname.replace(/\/+$/, "");
+  path = path.replace(/\/(?:api-docs|swagger(?:\/index\.html)?|openapi\.json)$/i, "");
+
+  if (/\/(?:api\/v2|v2\/api|api)$/.test(path)) return url.toString();
+
+  if (url.hostname === "etherscan.io" || url.hostname.endsWith(".etherscan.io")) {
+    url.hostname = "api.etherscan.io";
+    url.pathname = "/v2/api";
+    return url.toString();
+  }
+
+  const isBlockscout = url.hostname.includes("blockscout");
+  url.pathname = `${path}${isBlockscout ? "/api/v2" : "/api"}`;
+  return url.toString();
+}
+
 export function getExplorerAdapterKind(apiUrl: string | undefined): ExplorerAdapterKind | null {
-  const url = safeHttpUrl(apiUrl);
+  const normalizedUrl = normalizeExplorerApiUrl(apiUrl);
+  const url = safeHttpUrl(normalizedUrl ?? undefined);
   if (!url) return null;
   const path = url.pathname.replace(/\/+$/, "");
   if (path.endsWith("/api/v2")) return "blockscout-v2";
@@ -37,12 +59,15 @@ export function getExplorerAdapterKind(apiUrl: string | undefined): ExplorerAdap
   return null;
 }
 
+export function resolveExplorerApiUrl(network: NetworkConfig): string | null {
+  return normalizeExplorerApiUrl(network.explorerApiUrl?.trim() || network.explorerUrl);
+}
+
 export function canAutoDetectAbi(network: NetworkConfig | undefined, address: string): boolean {
   if (!network || !isAddress(address.trim(), { strict: false })) return false;
   if (!Number.isSafeInteger(network.chainId) || network.chainId <= 0) return false;
   if (!safeHttpUrl(network.rpcUrl) || !safeHttpUrl(network.explorerUrl)) return false;
-  if (!safeHttpUrl(network.explorerApiUrl) || !network.explorerApiKey?.trim()) return false;
-  return getExplorerAdapterKind(network.explorerApiUrl) !== null;
+  return getExplorerAdapterKind(resolveExplorerApiUrl(network) ?? undefined) !== null;
 }
 
 function failure(message: string, detail?: string): DetectAbiResult {
@@ -96,22 +121,22 @@ function abiFromValue(value: unknown): DetectAbiResult {
 }
 
 function explorerRequest(network: NetworkConfig, address: string, adapter: ExplorerAdapterKind) {
-  const baseUrl = safeHttpUrl(network.explorerApiUrl);
+  const baseUrl = safeHttpUrl(resolveExplorerApiUrl(network) ?? undefined);
   if (!baseUrl) return null;
   const apiKey = network.explorerApiKey?.trim() ?? "";
   const headers = new Headers({ Accept: "application/json" });
 
   if (adapter === "blockscout-v2") {
     baseUrl.pathname = `${baseUrl.pathname.replace(/\/+$/, "")}/smart-contracts/${encodeURIComponent(address)}`;
-    headers.set("apikey", apiKey);
+    if (apiKey) headers.set("apikey", apiKey);
   } else {
     const params = baseUrl.searchParams;
     if (adapter === "etherscan-v2") params.set("chainid", String(network.chainId));
     if (adapter === "blockscout-universal") {
       params.set("chain_id", String(network.chainId));
-      headers.set("Authorization", `Bearer ${apiKey}`);
+      if (apiKey) headers.set("Authorization", `Bearer ${apiKey}`);
     } else {
-      params.set("apikey", apiKey);
+      if (apiKey) params.set("apikey", apiKey);
     }
     params.set("module", "contract");
     params.set("action", "getabi");
@@ -188,12 +213,11 @@ export async function detectContractAbi(
     return failure("Hãy kiểm tra RPC URL và Chain ID của network.");
   if (
     !safeHttpUrl(network.explorerUrl) ||
-    !safeHttpUrl(network.explorerApiUrl) ||
-    !network.explorerApiKey?.trim()
+    !resolveExplorerApiUrl(network)
   )
-    return failure("Hãy cấu hình Explorer API URL và API key để dò ABI.");
+    return failure("Hãy cấu hình Block Explorer URL hoặc Explorer API URL để dò ABI.");
 
-  const adapter = getExplorerAdapterKind(network.explorerApiUrl);
+  const adapter = getExplorerAdapterKind(resolveExplorerApiUrl(network) ?? undefined);
   if (!adapter) return failure("Explorer API không được hỗ trợ.");
 
   let bytecode: string | undefined;
