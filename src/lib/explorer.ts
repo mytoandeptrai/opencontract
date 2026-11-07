@@ -33,6 +33,11 @@ export function normalizeExplorerApiUrl(value: string | undefined): string | nul
   let path = url.pathname.replace(/\/+$/, "");
   path = path.replace(/\/(?:api-docs|swagger(?:\/index\.html)?|openapi\.json)$/i, "");
 
+  const isBlockscout = url.hostname.includes("blockscout");
+  if (isBlockscout && path.endsWith("/api") && !path.endsWith("/api/v2")) {
+    url.pathname = `${path}/v2`;
+    return url.toString();
+  }
   if (/\/(?:api\/v2|v2\/api|api)$/.test(path)) return url.toString();
 
   if (url.hostname === "etherscan.io" || url.hostname.endsWith(".etherscan.io")) {
@@ -41,7 +46,6 @@ export function normalizeExplorerApiUrl(value: string | undefined): string | nul
     return url.toString();
   }
 
-  const isBlockscout = url.hostname.includes("blockscout");
   url.pathname = `${path}${isBlockscout ? "/api/v2" : "/api"}`;
   return url.toString();
 }

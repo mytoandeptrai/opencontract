@@ -236,6 +236,8 @@ export const english: Record<string, string> = {
   "Explorer API đã đạt giới hạn truy vấn. Hãy thử lại sau.":
     "Explorer API rate limit exceeded. Please try again later.",
   "Explorer API key không hợp lệ hoặc bị thiếu.": "Explorer API key is missing or invalid.",
+  "Hãy cấu hình RPC URL và Explorer URL hoặc Explorer API URL để dò ABI.":
+    "Configure an RPC URL and an Explorer URL or Explorer API URL to detect an ABI.",
   "Explorer trả về phản hồi không hợp lệ.": "Explorer returned an invalid response.",
   "Explorer trả về ABI không hợp lệ.": "Explorer returned an invalid ABI.",
   "Explorer API không được hỗ trợ.": "This Explorer API is not supported.",

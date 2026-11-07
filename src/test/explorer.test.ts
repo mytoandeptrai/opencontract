@@ -43,6 +43,12 @@ describe("Explorer ABI detection", () => {
   it("offers detection with valid network and Explorer settings even without an API key", () => {
     expect(canAutoDetectAbi(network, address)).toBe(true);
     expect(canAutoDetectAbi({ ...network, explorerApiKey: "" }, address)).toBe(true);
+    expect(
+      canAutoDetectAbi(
+        { ...network, explorerApiUrl: "", explorerUrl: "https://eth.blockscout.com" },
+        address,
+      ),
+    ).toBe(true);
     expect(canAutoDetectAbi({ ...network, rpcUrl: "not a URL" }, address)).toBe(false);
     expect(canAutoDetectAbi(network, "not an address")).toBe(false);
   });
@@ -55,6 +61,9 @@ describe("Explorer ABI detection", () => {
       "https://explorer-test.qday.info/api",
     );
     expect(normalizeExplorerApiUrl("https://eth.blockscout.com")).toBe(
+      "https://eth.blockscout.com/api/v2",
+    );
+    expect(normalizeExplorerApiUrl("https://eth.blockscout.com/api")).toBe(
       "https://eth.blockscout.com/api/v2",
     );
     expect(normalizeExplorerApiUrl("https://etherscan.io")).toBe("https://api.etherscan.io/v2/api");
