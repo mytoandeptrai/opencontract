@@ -66,7 +66,7 @@ export function resolveExplorerApiUrl(network: NetworkConfig): string | null {
 export function canAutoDetectAbi(network: NetworkConfig | undefined, address: string): boolean {
   if (!network || !isAddress(address.trim(), { strict: false })) return false;
   if (!Number.isSafeInteger(network.chainId) || network.chainId <= 0) return false;
-  if (!safeHttpUrl(network.rpcUrl) || !safeHttpUrl(network.explorerUrl)) return false;
+  if (!safeHttpUrl(network.rpcUrl)) return false;
   return getExplorerAdapterKind(resolveExplorerApiUrl(network) ?? undefined) !== null;
 }
 
@@ -212,10 +212,10 @@ export async function detectContractAbi(
   )
     return failure("Hãy kiểm tra RPC URL và Chain ID của network.");
   if (
-    !safeHttpUrl(network.explorerUrl) ||
+    !safeHttpUrl(network.rpcUrl) ||
     !resolveExplorerApiUrl(network)
   )
-    return failure("Hãy cấu hình Block Explorer URL hoặc Explorer API URL để dò ABI.");
+    return failure("Hãy cấu hình RPC URL và Explorer URL hoặc Explorer API URL để dò ABI.");
 
   const adapter = getExplorerAdapterKind(resolveExplorerApiUrl(network) ?? undefined);
   if (!adapter) return failure("Explorer API không được hỗ trợ.");
